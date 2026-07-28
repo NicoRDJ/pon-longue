@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PON Lounge — La Sala del Tiempo
 
-## Getting Started
+The real, production-track site for **PON Lounge**, a luxury lounge in
+Medellín themed around a room of exotic watches — horology, precision, and
+timeless nightlife. Built with Next.js (App Router) + TypeScript + Tailwind
+CSS v4, deployable on Vercel.
 
-First, run the development server:
+> This repo replaces the static HTML preview that used to live in
+> `../borrador pon lounge/site`. That folder is kept only as an archived
+> reference for the earlier draft — all new work happens here.
+
+**Brand direction (locked in):**
+
+- **Concept:** "La Sala del Tiempo" — a lounge staged like a collector's room
+  of exotic watches.
+- **Tagline:** _"Donde el tiempo se detiene y el lujo no tiene hora."_
+- **Palette:** obsidian black + brass/gold, with a deep emerald accent.
+  Typography: Playfair Display (headings) + Inter (body).
+
+Everything else (menu, reservations, gallery, real address/contact) is still
+placeholder/sample content pending the client's real information — this repo
+is intentionally starting small (hero + concept section) and will grow.
+
+## Tech stack
+
+| Concern       | Choice                                           |
+| ------------- | ------------------------------------------------ |
+| Framework     | Next.js 16 (App Router, Turbopack)               |
+| Language      | TypeScript (strict)                              |
+| Styling       | Tailwind CSS v4 (CSS-first `@theme` config)      |
+| Unit tests    | Vitest + React Testing Library                   |
+| E2E tests     | Playwright                                       |
+| Lint / format | ESLint (`eslint-config-next`) + Prettier         |
+| Git hooks     | Husky + lint-staged (auto lint/format on commit) |
+| CI            | GitHub Actions (`.github/workflows/ci.yml`)      |
+| Hosting       | Vercel                                           |
+
+## Getting started
+
+Requires Node 20+.
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in real values as they become available
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at **http://localhost:3100** (not the Next.js default 3000 —
+pinned explicitly so it never collides with other local projects).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script                 | What it does                                    |
+| ---------------------- | ----------------------------------------------- |
+| `npm run dev`          | Start the dev server on port 3100               |
+| `npm run build`        | Production build                                |
+| `npm run start`        | Serve the production build (port 3100)          |
+| `npm run lint`         | ESLint                                          |
+| `npm run lint:fix`     | ESLint with autofix                             |
+| `npm run format`       | Prettier — write                                |
+| `npm run format:check` | Prettier — check only (used in CI)              |
+| `npm run typecheck`    | `tsc --noEmit`                                  |
+| `npm run test`         | Unit tests (Vitest), single run                 |
+| `npm run test:watch`   | Unit tests, watch mode                          |
+| `npm run test:e2e`     | E2E tests (Playwright, builds + serves the app) |
+| `npm run test:e2e:ui`  | E2E tests with Playwright's UI runner           |
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/            # App Router routes, layout, metadata (robots.ts, sitemap.ts)
+  components/     # Reusable UI (co-located *.test.tsx unit tests)
+e2e/              # Playwright end-to-end specs
+.github/workflows/ci.yml   # Lint, typecheck, unit tests, build, e2e on every PR
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Kept flat on purpose while the project is small. As real features land
+(menu, reservations wizard, gallery — ported and rebuilt from the static
+draft), expect `lib/`, `types/`, and route groups to show up under `src/`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment variables
 
-## Deploy on Vercel
+See `.env.example` for the full list with comments. Copy it to `.env.local`
+(gitignored) and fill in real values — never commit secrets.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`NEXT_PUBLIC_ENV=production` is what flips `robots.ts`/`sitemap.ts` to allow
+indexing. Keep it unset (or anything else) until the real content is ready
+to go live, so search engines don't index placeholder content.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment (Vercel)
+
+This repo has not been connected to Vercel or GitHub yet. To do that:
+
+1. Push this repo to a GitHub repository (create one, e.g. `pon-lounge-bar`,
+   under whichever account/org should own it).
+2. In the [Vercel dashboard](https://vercel.com/new), import that GitHub
+   repo — Vercel auto-detects Next.js, no config needed.
+3. Add the environment variables from `.env.example` in the Vercel project
+   settings (at minimum `NEXT_PUBLIC_SITE_URL` pointing at the real domain,
+   and `NEXT_PUBLIC_ENV=production` once content is ready to be indexed).
+4. Every push to `main` deploys to production; every PR gets its own
+   preview URL automatically — this is how collaborators can review changes
+   without needing local setup.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) — branch naming, commit convention,
+and the PR checklist (CI must pass: lint, typecheck, unit tests, build, e2e).
