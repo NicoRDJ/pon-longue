@@ -17,7 +17,8 @@ TypeScript + Tailwind CSS v4, deployable on Vercel.
 - **Palette:** obsidian black + brass/gold, with a deep emerald accent.
   Typography: Playfair Display (headings) + Inter (body).
 
-Menu, gallery, testimonials, and real address/contact are still
+The cocktail menu (`src/data/menu.ts` → `cocktailMenu`) is the client's real
+recipe list. Food, gallery, testimonials, and real address/contact are still
 placeholder/sample content pending the client's real information — clearly
 marked in the UI (preview banners, "sample" notes) so it's obvious what
 still needs replacing.
@@ -188,10 +189,10 @@ src/
     layout.tsx, page.tsx, globals.css, robots.ts, sitemap.ts
   components/
     sections/           # Home page sections (Hero, About, MenuTeaser, ...)
-    ReservationWizard.tsx, MenuAccordion.tsx, Header.tsx, Footer.tsx, ...
+    ReservationWizard.tsx, MenuAccordion.tsx, MenuItemPhoto.tsx, Header.tsx, Footer.tsx, ...
     *.test.tsx           # Co-located unit tests
   db/                    # Drizzle schema, client, atomic booking SQL, seed script
-  data/menu.ts           # Sample menu content
+  data/menu.ts           # cocktailMenu (real) + menu (sample food/wine, still placeholder)
   lib/
     i18n/                # ES/EN dictionaries + React context (no page routing)
     config.ts            # Contact details, sourced from env vars
@@ -200,6 +201,14 @@ src/
 e2e/                     # Playwright specs (external APIs mocked via page.route())
 .github/workflows/ci.yml # Lint, typecheck, unit tests, build, e2e on every PR
 ```
+
+### Cocktail photos
+
+Menu items render a branded gradient placeholder (`MenuItemPhoto.tsx`) until
+a real photo exists. To add one: drop the image under `public/` (e.g.
+`public/carta/dama-de-pon.jpg`) and set `image: "/carta/dama-de-pon.jpg"` on
+that item in `src/data/menu.ts` — it swaps in automatically on both the
+homepage teaser and `/carta`, no other code changes needed.
 
 ## Environment variables
 
