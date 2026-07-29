@@ -99,7 +99,7 @@ export const dictionaries = {
     "location.addressLabel": "Dirección",
     "location.addressValue": "Por confirmar, Medellín",
     "location.hoursLabel": "Horario",
-    "location.hoursValue": "Martes a domingo · 6:00 p.m. – 2:00 a.m.",
+    "location.hoursValue": "Martes a domingo · 4:00 p.m. – 12:00 a.m.",
     "location.contactLabel": "Contacto",
 
     "reserve.eyebrow": "Reservas",
@@ -285,7 +285,7 @@ export const dictionaries = {
     "location.addressLabel": "Address",
     "location.addressValue": "To be confirmed, Medellín",
     "location.hoursLabel": "Hours",
-    "location.hoursValue": "Tuesday to Sunday · 6:00 pm – 2:00 am",
+    "location.hoursValue": "Tuesday to Sunday · 4:00 pm – 12:00 am",
     "location.contactLabel": "Contact",
 
     "reserve.eyebrow": "Reservations",

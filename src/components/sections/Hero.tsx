@@ -64,7 +64,7 @@ export default function Hero() {
             </div>
             <div>
               <strong className="font-display text-brass-light block text-2xl">
-                +120
+                +30
               </strong>
               <span className="text-cream-muted text-xs tracking-[0.05em] uppercase">
                 {t("hero.statCapacity")}
@@ -72,7 +72,7 @@ export default function Hero() {
             </div>
             <div>
               <strong className="font-display text-brass-light block text-2xl">
-                18:00–02:00
+                16:00–00:00
               </strong>
               <span className="text-cream-muted text-xs tracking-[0.05em] uppercase">
                 {t("hero.statHours")}

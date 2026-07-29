@@ -15,6 +15,7 @@ import {
   CONTACT_EMAIL,
   WHATSAPP_NUMBER,
 } from "@/lib/config";
+import { VENUE_OPEN_TIME, LAST_RESERVATION_TIME } from "@/lib/hours";
 
 const STEPS = [
   { n: 1, key: "wizard.step1" },
@@ -526,6 +527,9 @@ export default function ReservationWizard() {
                       id="rTimeFallback"
                       ref={timeFallbackRef}
                       type="time"
+                      min={VENUE_OPEN_TIME}
+                      max={LAST_RESERVATION_TIME}
+                      step={1800}
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
                       className="focus-visible:border-brass text-cream w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm"

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getSql } from "@/db/client";
+import { bookReservation, type BookResult } from "@/db/reservationsStore";
 import { sendReservationConfirmation } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
@@ -16,12 +16,6 @@ const bodySchema = z.object({
   notes: z.string().trim().max(1000).optional(),
   lang: z.enum(["es", "en"]).default("es"),
 });
-
-type BookReservationRow = {
-  id: string | null;
-  status: "confirmed" | "full" | "unknown_slot" | "invalid_party_size";
-  remaining: number | null;
-};
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -42,15 +36,18 @@ export async function POST(req: NextRequest) {
   const { name, email, phone, partySize, date, time, occasion, notes, lang } =
     parsed.data;
 
-  let rows: BookReservationRow[];
+  let result: BookResult;
   try {
-    const sql = getSql();
-    rows = (await sql`
-      select * from book_reservation(
-        ${name}, ${email || null}, ${phone || null}, ${partySize},
-        ${date}, ${time}, ${occasion || null}, ${notes || null}
-      )
-    `) as BookReservationRow[];
+    result = await bookReservation({
+      name,
+      email: email || null,
+      phone: phone || null,
+      partySize,
+      date,
+      time,
+      occasion: occasion || null,
+      notes: notes || null,
+    });
   } catch (err) {
     console.error("POST /api/reservations failed:", err);
     return NextResponse.json(
@@ -58,8 +55,6 @@ export async function POST(req: NextRequest) {
       { status: 503 },
     );
   }
-
-  const result = rows[0];
 
   if (!result || result.status !== "confirmed") {
     const reason = result?.status ?? "unknown_error";

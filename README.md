@@ -52,10 +52,9 @@ npm run dev
 The app runs at **http://localhost:3100** (not the Next.js default 3000 —
 pinned explicitly so it never collides with other local projects).
 
-Without `DATABASE_URL` set, the reservation wizard still works — it
-automatically degrades to manual WhatsApp/call/email booking (see
-"Reservations" below). Nothing breaks; you just don't get automatic
-confirmation until the database is connected.
+Without `DATABASE_URL` set, reservations still book automatically — they're
+just stored in a local, file-simulated database instead of real Postgres
+(see "Reservations" below). Nothing to provision, nothing breaks.
 
 ## Reservations: automatic, no one has to manage them
 
@@ -63,23 +62,40 @@ The reservation wizard books directly against a database — no person has
 to read WhatsApp and reply. The flow:
 
 1. Customer picks a date → the UI fetches real remaining capacity per time
-   slot from the database (`GET /api/availability?date=`).
+   slot (`GET /api/availability?date=`).
 2. Customer fills in their details and hits **Confirmar reserva** →
-   `POST /api/reservations` calls a Postgres function, `book_reservation()`,
-   that checks capacity and inserts the reservation **atomically** (using
-   `pg_advisory_xact_lock` so two people booking the last spot at the same
-   moment can't both succeed — no double-booking race condition).
-3. On success, a confirmation email is sent immediately via Resend. No
-   inbox to check, no reply needed.
+   `POST /api/reservations` checks capacity and inserts the reservation
+   atomically, so two people booking the last spot at the same moment
+   can't both succeed — no double-booking race condition.
+3. On success, a confirmation email is sent immediately via Resend (only
+   when running against real Postgres — see below). No inbox to check, no
+   reply needed.
 4. If a slot is full or something goes wrong, the customer sees that
    instantly and can pick another time — never a false "confirmed".
 
-If the database isn't reachable (not set up yet, or a transient error),
-the wizard **automatically falls back** to the original manual flow
-(WhatsApp / call / email with a prefilled message) instead of breaking —
-see `ReservationWizard.tsx`'s `slotsFailed`/`liveMode` state.
+**Two backends, chosen automatically** (`src/db/reservationsStore.ts`):
 
-### One-time setup
+- **No `DATABASE_URL`/`POSTGRES_URL` set** (the default, e.g. fresh clone
+  or before Postgres is provisioned): reservations are stored in a local
+  JSON file at `.data/local-reservations.json` (gitignored, created
+  automatically). This is a real working booking system — capacity limits,
+  slot locking, everything — just backed by a file instead of Postgres.
+  Good enough to run the venue on while the real database isn't set up
+  yet. On serverless (e.g. an early Vercel deploy without Postgres
+  configured), writes are best-effort per instance since the filesystem
+  isn't persistent there — provision Postgres before relying on it in
+  production.
+- **`DATABASE_URL`/`POSTGRES_URL` set**: reservations go through real
+  Postgres (Neon) via the `book_reservation()` SQL function, which uses
+  `pg_advisory_xact_lock` for the same atomicity guarantee. Confirmation
+  emails only fire in this mode.
+
+If the API itself is unreachable (network error, not just an empty
+database), the wizard **falls back further** to the original manual flow
+(WhatsApp / call / email with a prefilled message) — see
+`ReservationWizard.tsx`'s `slotsFailed`/`liveMode` state.
+
+### Switching to real Postgres
 
 1. **Provision Postgres.** In the Vercel dashboard, open this project →
    **Storage** → **Create Database** → **Postgres** (this is Neon under the
@@ -107,22 +123,34 @@ see `ReservationWizard.tsx`'s `slotsFailed`/`liveMode` state.
    from `onboarding@resend.dev`, which works fine for any recipient — just
    swap the `FROM_ADDRESS` in `src/lib/email.ts` once a domain is verified.
 
-### Changing capacity or time slots
+### Changing hours or capacity
 
-Time slots and their capacity live in the `slot_capacity` table (seeded by
-`npm run db:seed` from the defaults in `src/db/seed.ts`). To change them
-later without touching code, update that table directly — e.g. via
-Vercel's Postgres dashboard/query tab, or Neon's SQL editor. Adding a new
-slot is just inserting a row; the availability API and wizard pick it up
-automatically.
+Operating hours, the last reservation time, and per-slot capacity all come
+from one file: **`src/lib/hours.ts`**. It generates a slot every 30
+minutes from open until the last reservation time (currently **4:00 p.m.
+to 9:00 p.m.**, venue open until midnight), each with a default capacity
+of **30** — both the local simulated DB and the Postgres seed
+(`src/db/seed.ts`) read from it, so there's one source of truth regardless
+of which backend is active.
+
+- Editing `src/lib/hours.ts` and restarting the dev server updates the
+  local simulated DB immediately (delete `.data/local-reservations.json`
+  if you want to also clear existing local test bookings).
+- On real Postgres, edit `src/lib/hours.ts` and re-run `npm run db:seed`
+  (upserts, safe to re-run) — or update the `slot_capacity` table directly
+  via Vercel's Postgres dashboard/Neon's SQL editor for a one-off change
+  without redeploying.
 
 ### Files involved
 
 ```
+src/lib/hours.ts                # Single source of truth: hours, slots, capacity
+src/db/reservationsStore.ts     # Picks local-simulated vs real Postgres automatically
+src/db/localStore.ts            # Local JSON-file-simulated DB (no setup required)
 src/db/schema.ts              # Drizzle schema: reservations, slot_capacity
 src/db/client.ts               # Lazily-initialized Neon/Drizzle client
 src/db/sql/book_reservation.sql  # The atomic booking Postgres function
-src/db/seed.ts                  # Installs the function + seeds default slots
+src/db/seed.ts                  # Installs the function + seeds default slots (Postgres only)
 src/app/api/availability/route.ts   # GET real-time remaining capacity
 src/app/api/reservations/route.ts   # POST — books + triggers confirmation email
 src/lib/email.ts                # Resend confirmation email

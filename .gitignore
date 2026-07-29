@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local simulated reservations DB (see src/db/localStore.ts)
+/.data/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
