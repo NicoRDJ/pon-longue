@@ -18,10 +18,24 @@ test.describe("Home page", () => {
     ).toBeVisible();
   });
 
-  test("concept section is reachable via anchor link", async ({ page }) => {
+  test("nav Carta link goes to the standalone menu page", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "Conocer el concepto" }).click();
-    await expect(page.locator("#concepto")).toBeInViewport();
+    await page.locator("nav").getByRole("link", { name: "Carta" }).click();
+    await expect(page).toHaveURL(/\/carta$/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  test("all main sections are present", async ({ page }) => {
+    await page.goto("/");
+    for (const id of [
+      "nosotros",
+      "eventos",
+      "galeria",
+      "ubicacion",
+      "reservas",
+    ]) {
+      await expect(page.locator(`#${id}`)).toBeAttached();
+    }
   });
 
   test("has no console errors on load", async ({ page }) => {
@@ -32,5 +46,30 @@ test.describe("Home page", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
     expect(errors).toEqual([]);
+  });
+
+  test("mobile nav opens and closes", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Abrir menú" }).click();
+    await expect(
+      page.getByRole("button", { name: "Cerrar menú" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Cerrar menú" }).click();
+    await expect(page.locator("#mobile-nav")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+  });
+
+  test("language toggle switches hero copy to English", async ({ page }) => {
+    await page.goto("/");
+    await page
+      .locator("header")
+      .getByRole("button", { name: "EN", exact: true })
+      .click();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "luxury has no hour",
+    );
   });
 });

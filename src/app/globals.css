@@ -4,8 +4,8 @@
   --background: #0b0d10;
   --foreground: #f2ece0;
 
-  /* PON Lounge — "La Sala del Tiempo" palette: obsidian + brass, for an
-     exotic-watch-collection / horology lounge concept. */
+  /* PON Lounge — "La Sala del Tiempo" palette: obsidian + brass, an ode to
+     time and VIP/luxury nightlife. */
   --color-obsidian: #0b0d10;
   --color-obsidian-soft: #14181d;
   --color-navy: #101820;
@@ -38,6 +38,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+/* Anchor-linked sections sit below the fixed preview banner + header;
+   without this, jumping to #id (or scrollIntoView) hides the section's
+   top under those fixed elements. */
+section[id] {
+  scroll-margin-top: 118px;
 }
 
 @keyframes tick {
