@@ -1,9 +1,41 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-test.describe("Reservation wizard", () => {
+const MOCK_SLOTS = [
+  { time: "18:00", capacity: 40, booked: 6 },
+  { time: "19:00", capacity: 40, booked: 21 },
+  { time: "20:00", capacity: 40, booked: 33 },
+  { time: "21:00", capacity: 30, booked: 30 }, // full
+  { time: "22:00", capacity: 30, booked: 9 },
+];
+
+async function mockAvailability(page: Page) {
+  await page.route("**/api/availability*", (route) =>
+    route.fulfill({ json: { date: "2026-09-01", slots: MOCK_SLOTS } }),
+  );
+}
+
+async function mockReservationOutcome(
+  page: Page,
+  outcome: "confirmed" | "full",
+) {
+  await page.route("**/api/reservations", (route) =>
+    outcome === "confirmed"
+      ? route.fulfill({
+          status: 201,
+          json: { id: "test-id", status: "confirmed", remaining: 5 },
+        })
+      : route.fulfill({
+          status: 409,
+          json: { error: "full", remaining: 0 },
+        }),
+  );
+}
+
+test.describe("Reservation wizard — live availability (mocked API)", () => {
   test("blocks advancing past step 2 without date and time", async ({
     page,
   }) => {
+    await mockAvailability(page);
     await page.goto("/#reservas");
     await page.locator("#reservas").scrollIntoViewIfNeeded();
 
@@ -14,9 +46,24 @@ test.describe("Reservation wizard", () => {
     await expect(page.getByText("¿Qué día y a qué hora?")).toBeVisible();
   });
 
-  test("full happy path reaches the confirmation step with a live summary", async ({
+  test("a full time slot cannot be selected", async ({ page }) => {
+    await mockAvailability(page);
+    await page.goto("/#reservas");
+    await page.locator("#reservas").scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+    await page.locator("#rDate").fill("2026-09-01");
+
+    const fullSlot = page.locator('[role="radio"][disabled]').first();
+    await expect(fullSlot).toBeVisible();
+    await expect(fullSlot).toHaveAttribute("aria-checked", "false");
+  });
+
+  test("full happy path confirms automatically and offers a calendar download", async ({
     page,
   }) => {
+    await mockAvailability(page);
+    await mockReservationOutcome(page, "confirmed");
+
     await page.goto("/#reservas");
     await page.locator("#reservas").scrollIntoViewIfNeeded();
 
@@ -31,26 +78,78 @@ test.describe("Reservation wizard", () => {
     await page.getByRole("button", { name: "Siguiente" }).click();
 
     await page.locator("#rName").fill("Ana Torres");
-    await page.getByRole("radio", { name: "Correo" }).click();
+    await page.locator("#rEmail").fill("ana@example.com");
     await page.getByRole("button", { name: "Siguiente" }).click();
 
     await expect(page.getByText("Ana Torres")).toBeVisible();
     await expect(page.getByText("3 personas")).toBeVisible();
+
+    await page.getByRole("button", { name: "Confirmar reserva" }).click();
+    await expect(page.getByText("¡Reserva confirmada!")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /Reservar por correo/ }),
+      page.getByRole("button", { name: /Agregar a mi calendario/ }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Siguiente" }),
-    ).not.toBeVisible();
   });
 
-  test("a full time slot cannot be selected", async ({ page }) => {
+  test("shows a clear message and lets the user pick another time when a slot fills up mid-booking", async ({
+    page,
+  }) => {
+    await mockAvailability(page);
+    await mockReservationOutcome(page, "full");
+
     await page.goto("/#reservas");
     await page.locator("#reservas").scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "Siguiente" }).click();
 
-    const fullSlot = page.locator('[role="radio"][disabled]').first();
-    await expect(fullSlot).toBeVisible();
-    await expect(fullSlot).toHaveAttribute("aria-checked", "false");
+    await page.locator("#rDate").fill("2026-09-01");
+    await page.locator('[role="radio"]:not([disabled])').first().click();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rName").fill("Ana Torres");
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.getByRole("button", { name: "Confirmar reserva" }).click();
+    await expect(
+      page.getByText("Ese horario se acaba de llenar"),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Elegir otra hora" }).click();
+    await expect(page.getByText("¿Qué día y a qué hora?")).toBeVisible();
+  });
+});
+
+test.describe("Reservation wizard — fallback (no live availability)", () => {
+  test("degrades to a manual time input and WhatsApp/call/email contact", async ({
+    page,
+  }) => {
+    await page.route("**/api/availability*", (route) =>
+      route.fulfill({
+        status: 503,
+        json: { error: "availability_unavailable" },
+      }),
+    );
+
+    await page.goto("/#reservas");
+    await page.locator("#reservas").scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rDate").fill("2026-09-01");
+    await expect(
+      page.getByText("No pudimos cargar la disponibilidad"),
+    ).toBeVisible();
+    await expect(page.locator("#rTimeFallback")).toBeVisible();
+    await page.locator("#rTimeFallback").fill("20:00");
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rName").fill("Ana Torres");
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    // No automatic "Confirmar reserva" button in fallback mode — only the
+    // manual channel-based contact options.
+    await expect(
+      page.getByRole("button", { name: "Confirmar reserva" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /Reservar por WhatsApp/ }),
+    ).toBeVisible();
   });
 });

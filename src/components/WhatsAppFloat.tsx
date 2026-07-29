@@ -1,8 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-
-const WHATSAPP_NUMBER = "573000000000"; // TODO: replace with the real WhatsApp number
+import { WHATSAPP_NUMBER } from "@/lib/config";
 
 export default function WhatsAppFloat() {
   const { t } = useLanguage();

@@ -1,19 +1,20 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { DictKey } from "@/lib/i18n/dictionaries";
-import { timeSlots, getSlotStatus } from "@/data/availability";
 import {
   buildReservationIcs,
   buildReservationMessage,
   formatDate,
   formatTime,
 } from "@/lib/reservation";
-
-const PHONE_E164 = "+573000000000"; // TODO: replace with the real phone number
-const CONTACT_EMAIL = "hola@ponlounge.co"; // TODO: replace with the real reservations email
-const WHATSAPP_NUMBER = "573000000000"; // TODO: replace with the real WhatsApp number
+import {
+  PHONE_E164,
+  PHONE_DISPLAY,
+  CONTACT_EMAIL,
+  WHATSAPP_NUMBER,
+} from "@/lib/config";
 
 const STEPS = [
   { n: 1, key: "wizard.step1" },
@@ -31,6 +32,16 @@ const OCCASIONS = [
 ] as const satisfies { value: string; key: DictKey }[];
 
 type Channel = "whatsapp" | "call" | "email";
+type Slot = { time: string; capacity: number; booked: number };
+type SlotStatus = "open" | "low" | "full";
+type BookingState = "idle" | "submitting" | "confirmed" | "full" | "error";
+
+function slotStatus(slot: Slot): SlotStatus {
+  const ratio = slot.booked / slot.capacity;
+  if (ratio >= 1) return "full";
+  if (ratio >= 0.75) return "low";
+  return "open";
+}
 
 function Chip({
   selected,
@@ -72,12 +83,60 @@ export default function ReservationWizard() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [channel, setChannel] = useState<Channel>("whatsapp");
+
+  const [slots, setSlots] = useState<Slot[] | null>(null);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsFailed, setSlotsFailed] = useState(false);
+
+  const [bookingState, setBookingState] = useState<BookingState>("idle");
 
   const nameRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const timeGroupRef = useRef<HTMLDivElement>(null);
+  const timeFallbackRef = useRef<HTMLInputElement>(null);
+
+  // Live mode: we successfully loaded real availability for this date, so
+  // the primary action is automatic confirmation against the database.
+  // Fallback mode (slotsFailed): degrade gracefully to manual WhatsApp/
+  // call/email, e.g. while the database isn't connected yet.
+  const liveMode = !slotsFailed;
+
+  useEffect(() => {
+    if (!date) return;
+    let cancelled = false;
+    /* eslint-disable react-hooks/set-state-in-effect -- this effect's job
+       is fetching availability for the selected date; loading/failed are
+       reset synchronously right before the request starts. */
+    setSlotsLoading(true);
+    setSlotsFailed(false);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    fetch(`/api/availability?date=${date}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        return res.json();
+      })
+      .then((data: { slots: Slot[] }) => {
+        if (cancelled) return;
+        setSlots(data.slots);
+        setTime((current) =>
+          data.slots.some((s) => s.time === current) ? current : "",
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSlots(null);
+        setSlotsFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date]);
 
   const slotStatusLabel = {
     open: t("reserve.legendOpen"),
@@ -85,14 +144,10 @@ export default function ReservationWizard() {
     full: t("reserve.legendFull"),
   };
 
-  function selectTime(chipTime: string) {
-    setTime(chipTime);
-  }
-
   function moveTimeFocus(dir: 1 | -1, currentIdx: number) {
-    const next =
-      timeSlots[(currentIdx + dir + timeSlots.length) % timeSlots.length];
-    if (!next || getSlotStatus(next) === "full") return;
+    if (!slots) return;
+    const next = slots[(currentIdx + dir + slots.length) % slots.length];
+    if (!next || slotStatus(next) === "full") return;
     setTime(next.time);
     document.getElementById(`time-chip-${next.time}`)?.focus();
   }
@@ -106,7 +161,13 @@ export default function ReservationWizard() {
   function goNext() {
     if (!validateStep(step)) {
       if (step === 2) {
-        (date ? timeGroupRef.current : dateRef.current)?.focus();
+        if (!date) {
+          dateRef.current?.focus();
+        } else if (slotsFailed) {
+          timeFallbackRef.current?.focus();
+        } else {
+          timeGroupRef.current?.focus();
+        }
       }
       if (step === 3) nameRef.current?.focus();
       return;
@@ -148,8 +209,7 @@ export default function ReservationWizard() {
     document.body.removeChild(a);
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function confirmAutomatically() {
     if (!name.trim() || !date || !time) {
       if (!name.trim()) {
         setStep(3);
@@ -160,6 +220,39 @@ export default function ReservationWizard() {
       return;
     }
 
+    setBookingState("submitting");
+
+    try {
+      const res = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          partySize: people,
+          date,
+          time,
+          occasion,
+          notes,
+          lang,
+        }),
+      });
+
+      if (res.status === 201) {
+        setBookingState("confirmed");
+        return;
+      }
+      if (res.status === 409) {
+        setBookingState("full");
+        return;
+      }
+      setBookingState("error");
+    } catch {
+      setBookingState("error");
+    }
+  }
+
+  function contactManually() {
     const message = buildReservationMessage({
       lang,
       name,
@@ -184,7 +277,7 @@ export default function ReservationWizard() {
     }
   }
 
-  const submitLabelKey: DictKey =
+  const manualLabelKey: DictKey =
     channel === "call"
       ? "reserve.submitCall"
       : channel === "email"
@@ -241,7 +334,7 @@ export default function ReservationWizard() {
                 href={`tel:${PHONE_E164}`}
                 className="text-cream inline-flex w-fit items-center gap-2.5 text-sm"
               >
-                <span className="text-brass">☎</span> +57 300 000 0000
+                <span className="text-brass">☎</span> {PHONE_DISPLAY}
               </a>
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
@@ -252,10 +345,7 @@ export default function ReservationWizard() {
             </div>
           </aside>
 
-          <form
-            onSubmit={handleSubmit}
-            className="bg-obsidian-soft border border-white/10 p-8.5"
-          >
+          <div className="bg-obsidian-soft border border-white/10 p-8.5">
             {step === 1 && (
               <div>
                 <h3 className="font-display text-cream mb-5.5 text-xl">
@@ -332,76 +422,119 @@ export default function ReservationWizard() {
                     ref={dateRef}
                     type="date"
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setDate(value);
+                      setTime("");
+                      setSlots(null);
+                      setSlotsFailed(false);
+                    }}
                     className="focus-visible:border-brass text-cream w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm"
                   />
                 </div>
-                <div>
-                  <label
-                    id="time-label"
-                    className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
-                  >
-                    {t("reserve.time")}
-                  </label>
-                  <div
-                    ref={timeGroupRef}
-                    role="radiogroup"
-                    aria-labelledby="time-label"
-                    tabIndex={-1}
-                    className="flex flex-wrap gap-2"
-                  >
-                    {timeSlots.map((slot, idx) => {
-                      const status = getSlotStatus(slot);
-                      const dotClass =
-                        status === "full"
-                          ? "bg-[#8a5050]"
-                          : status === "low"
-                            ? "bg-brass"
-                            : "bg-[#4caf7d]";
-                      return (
-                        <Chip
-                          key={slot.time}
-                          selected={time === slot.time}
-                          disabled={status === "full"}
-                          ariaLabel={`${formatTime(slot.time)} — ${slotStatusLabel[status]}`}
-                          onClick={() => selectTime(slot.time)}
-                          onKeyDown={(e) => {
-                            const dir =
-                              e.key === "ArrowRight"
-                                ? 1
-                                : e.key === "ArrowLeft"
-                                  ? -1
-                                  : 0;
-                            if (!dir) return;
-                            e.preventDefault();
-                            moveTimeFocus(dir, idx);
-                          }}
-                        >
-                          <span
-                            id={`time-chip-${slot.time}`}
-                            className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${dotClass}`}
-                            aria-hidden="true"
-                          />
-                          {formatTime(slot.time)}
-                        </Chip>
-                      );
-                    })}
+
+                {!date && (
+                  <p className="text-cream-muted text-sm italic">
+                    {t("reserve.chooseDateFirst")}
+                  </p>
+                )}
+
+                {date && slotsLoading && (
+                  <p className="text-cream-muted text-sm italic">
+                    {t("reserve.slotsLoading")}
+                  </p>
+                )}
+
+                {date && !slotsLoading && liveMode && slots && (
+                  <div>
+                    <label
+                      id="time-label"
+                      className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
+                    >
+                      {t("reserve.time")}
+                    </label>
+                    <div
+                      ref={timeGroupRef}
+                      role="radiogroup"
+                      aria-labelledby="time-label"
+                      tabIndex={-1}
+                      className="flex flex-wrap gap-2"
+                    >
+                      {slots.map((slot, idx) => {
+                        const status = slotStatus(slot);
+                        const dotClass =
+                          status === "full"
+                            ? "bg-[#8a5050]"
+                            : status === "low"
+                              ? "bg-brass"
+                              : "bg-[#4caf7d]";
+                        return (
+                          <Chip
+                            key={slot.time}
+                            selected={time === slot.time}
+                            disabled={status === "full"}
+                            ariaLabel={`${formatTime(slot.time)} — ${slotStatusLabel[status]}`}
+                            onClick={() => setTime(slot.time)}
+                            onKeyDown={(e) => {
+                              const dir =
+                                e.key === "ArrowRight"
+                                  ? 1
+                                  : e.key === "ArrowLeft"
+                                    ? -1
+                                    : 0;
+                              if (!dir) return;
+                              e.preventDefault();
+                              moveTimeFocus(dir, idx);
+                            }}
+                          >
+                            <span
+                              id={`time-chip-${slot.time}`}
+                              className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full ${dotClass}`}
+                              aria-hidden="true"
+                            />
+                            {formatTime(slot.time)}
+                          </Chip>
+                        );
+                      })}
+                    </div>
+                    <div className="text-cream-muted mt-3 flex flex-wrap gap-4 text-xs">
+                      <span className="inline-flex items-center gap-1.5">
+                        <i className="h-2 w-2 rounded-full bg-[#4caf7d]" />
+                        {t("reserve.legendOpen")}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <i className="bg-brass h-2 w-2 rounded-full" />
+                        {t("reserve.legendLow")}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <i className="h-2 w-2 rounded-full bg-[#8a5050]" />
+                        {t("reserve.legendFull")}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-cream-muted mt-3 flex flex-wrap gap-4 text-xs">
-                    <span className="inline-flex items-center gap-1.5">
-                      <i className="h-2 w-2 rounded-full bg-[#4caf7d]" />
-                      {t("reserve.legendOpen")}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <i className="bg-brass h-2 w-2 rounded-full" />
-                      {t("reserve.legendLow")}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <i className="h-2 w-2 rounded-full bg-[#8a5050]" />
-                      {t("reserve.legendFull")}
-                    </span>
+                )}
+
+                {date && !slotsLoading && slotsFailed && (
+                  <div>
+                    <label
+                      htmlFor="rTimeFallback"
+                      className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
+                    >
+                      {t("reserve.time")}
+                    </label>
+                    <input
+                      id="rTimeFallback"
+                      ref={timeFallbackRef}
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className="focus-visible:border-brass text-cream w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm"
+                    />
+                    <p className="text-cream-muted mt-2.5 text-xs italic">
+                      {t("reserve.slotsUnavailable")}
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -430,6 +563,23 @@ export default function ReservationWizard() {
                 </div>
                 <div className="mb-4">
                   <label
+                    htmlFor="rEmail"
+                    className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
+                  >
+                    {t("reserve.email")}
+                  </label>
+                  <input
+                    id="rEmail"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="nombre@correo.com"
+                    className="focus-visible:border-brass text-cream w-full rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm"
+                  />
+                </div>
+                <div>
+                  <label
                     htmlFor="rNotes"
                     className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
                   >
@@ -443,38 +593,6 @@ export default function ReservationWizard() {
                     className="focus-visible:border-brass text-cream min-h-[80px] w-full resize-y rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm"
                   />
                 </div>
-                <div>
-                  <label
-                    id="channel-label"
-                    className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
-                  >
-                    {t("reserve.channelLabel")}
-                  </label>
-                  <div
-                    role="radiogroup"
-                    aria-labelledby="channel-label"
-                    className="flex flex-wrap gap-2"
-                  >
-                    <Chip
-                      selected={channel === "whatsapp"}
-                      onClick={() => setChannel("whatsapp")}
-                    >
-                      WhatsApp
-                    </Chip>
-                    <Chip
-                      selected={channel === "call"}
-                      onClick={() => setChannel("call")}
-                    >
-                      {t("reserve.channelCall")}
-                    </Chip>
-                    <Chip
-                      selected={channel === "email"}
-                      onClick={() => setChannel("email")}
-                    >
-                      {t("reserve.channelEmail")}
-                    </Chip>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -483,73 +601,170 @@ export default function ReservationWizard() {
                 <h3 className="font-display text-cream mb-5.5 text-xl">
                   {t("wizard.pane4Title")}
                 </h3>
-                <div className="border-brass/35 bg-brass/[0.05] rounded-2xl border border-dashed p-5">
-                  <div className="text-brass mb-2.5 text-[11px] font-bold tracking-[0.1em] uppercase">
-                    {t("reserve.previewTitle")}
-                  </div>
-                  {previewRows ? (
-                    <div>
-                      {previewRows.map(([label, value]) => (
-                        <div
-                          key={label}
-                          className="flex justify-between gap-3 border-b border-dashed border-white/10 py-1.5 text-sm last:border-b-0"
-                        >
-                          <span className="text-cream-muted">{label}</span>
-                          <span className="text-cream text-right font-semibold">
-                            {value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-cream-muted text-[13px] italic">
-                      {t("reserve.previewEmpty")}
+
+                {bookingState === "confirmed" ? (
+                  <div className="rounded-2xl border border-[#4caf7d]/40 bg-[#4caf7d]/[0.08] p-6 text-center">
+                    <div className="mb-2 text-2xl">✓</div>
+                    <p className="text-cream font-semibold">
+                      {t("reserve.confirmedTitle")}
                     </p>
-                  )}
-                  {date && time && (
-                    <button
-                      type="button"
-                      onClick={downloadIcs}
-                      className="border-brass/35 text-brass-light hover:bg-brass/[0.08] mt-3.5 flex w-full justify-center rounded-full border border-dashed py-2.5 text-[13px] font-semibold"
+                    <p className="text-cream-muted mt-1.5 text-sm">
+                      {t("reserve.confirmedBody")}
+                    </p>
+                    {date && time && (
+                      <button
+                        type="button"
+                        onClick={downloadIcs}
+                        className="border-brass/35 text-brass-light hover:bg-brass/[0.08] mt-4 flex w-full justify-center rounded-full border border-dashed py-2.5 text-[13px] font-semibold"
+                      >
+                        {t("reserve.addToCalendar")}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="border-brass/35 bg-brass/[0.05] rounded-2xl border border-dashed p-5">
+                      <div className="text-brass mb-2.5 text-[11px] font-bold tracking-[0.1em] uppercase">
+                        {t("reserve.previewTitle")}
+                      </div>
+                      {previewRows ? (
+                        <div>
+                          {previewRows.map(([label, value]) => (
+                            <div
+                              key={label}
+                              className="flex justify-between gap-3 border-b border-dashed border-white/10 py-1.5 text-sm last:border-b-0"
+                            >
+                              <span className="text-cream-muted">{label}</span>
+                              <span className="text-cream text-right font-semibold">
+                                {value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-cream-muted text-[13px] italic">
+                          {t("reserve.previewEmpty")}
+                        </p>
+                      )}
+                    </div>
+
+                    {liveMode && (
+                      <div className="mt-5">
+                        <button
+                          type="button"
+                          onClick={confirmAutomatically}
+                          disabled={bookingState === "submitting"}
+                          className="from-brass-light to-brass text-obsidian flex w-full justify-center rounded-full bg-gradient-to-br px-6.5 py-3.5 text-sm font-semibold disabled:opacity-60"
+                        >
+                          {bookingState === "submitting"
+                            ? t("reserve.confirming")
+                            : t("reserve.confirmAuto")}
+                        </button>
+                        {bookingState === "full" && (
+                          <div className="mt-3 text-center">
+                            <p className="text-sm text-[#e08a8a]">
+                              {t("reserve.errorFull")}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setStep(2)}
+                              className="text-brass-light mt-1.5 text-sm underline"
+                            >
+                              {t("reserve.chooseAnotherTime")}
+                            </button>
+                          </div>
+                        )}
+                        {bookingState === "error" && (
+                          <p className="mt-3 text-center text-sm text-[#e08a8a]">
+                            {t("reserve.errorGeneric")}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <div
+                      className={
+                        liveMode ? "mt-7 border-t border-white/10 pt-6" : "mt-5"
+                      }
                     >
-                      {t("reserve.addToCalendar")}
-                    </button>
-                  )}
-                </div>
+                      {liveMode && (
+                        <p className="text-cream-muted mb-4 text-center text-xs tracking-[0.05em] uppercase">
+                          {t("reserve.orContactDirect")}
+                        </p>
+                      )}
+                      <label
+                        id="channel-label"
+                        className="text-cream-muted mb-2 block text-xs tracking-[0.06em] uppercase"
+                      >
+                        {t("reserve.channelLabel")}
+                      </label>
+                      <div
+                        role="radiogroup"
+                        aria-labelledby="channel-label"
+                        className="mb-4 flex flex-wrap gap-2"
+                      >
+                        <Chip
+                          selected={channel === "whatsapp"}
+                          onClick={() => setChannel("whatsapp")}
+                        >
+                          WhatsApp
+                        </Chip>
+                        <Chip
+                          selected={channel === "call"}
+                          onClick={() => setChannel("call")}
+                        >
+                          {t("reserve.channelCall")}
+                        </Chip>
+                        <Chip
+                          selected={channel === "email"}
+                          onClick={() => setChannel("email")}
+                        >
+                          {t("reserve.channelEmail")}
+                        </Chip>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={contactManually}
+                        className={
+                          liveMode
+                            ? "border-cream text-cream hover:border-brass flex w-full justify-center rounded-full border px-6.5 py-3 text-sm font-semibold"
+                            : "from-brass-light to-brass text-obsidian flex w-full justify-center rounded-full bg-gradient-to-br px-6.5 py-3.5 text-sm font-semibold"
+                        }
+                      >
+                        {t(manualLabelKey)}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
-            <div className="mt-7.5 flex items-center justify-between gap-3.5 border-t border-white/10 pt-6">
-              {step > 1 ? (
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="text-cream hover:border-brass rounded-full border border-white/15 px-6.5 py-3 text-sm font-semibold"
-                >
-                  {t("wizard.back")}
-                </button>
-              ) : (
-                <span />
-              )}
+            {bookingState !== "confirmed" && (
+              <div className="mt-7.5 flex items-center justify-between gap-3.5 border-t border-white/10 pt-6">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={goBack}
+                    className="text-cream hover:border-brass rounded-full border border-white/15 px-6.5 py-3 text-sm font-semibold"
+                  >
+                    {t("wizard.back")}
+                  </button>
+                ) : (
+                  <span />
+                )}
 
-              {step < 4 ? (
-                <button
-                  type="button"
-                  onClick={goNext}
-                  className="from-brass-light to-brass text-obsidian ml-auto rounded-full bg-gradient-to-br px-6.5 py-3 text-sm font-semibold"
-                >
-                  {t("wizard.next")}
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="from-brass-light to-brass text-obsidian ml-auto rounded-full bg-gradient-to-br px-6.5 py-3 text-sm font-semibold"
-                >
-                  {t(submitLabelKey)}
-                </button>
-              )}
-            </div>
-          </form>
+                {step < 4 && (
+                  <button
+                    type="button"
+                    onClick={goNext}
+                    className="from-brass-light to-brass text-obsidian ml-auto rounded-full bg-gradient-to-br px-6.5 py-3 text-sm font-semibold"
+                  >
+                    {t("wizard.next")}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <p className="text-cream-muted mx-auto mt-7 max-w-3xl text-center text-[13px]">

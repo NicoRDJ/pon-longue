@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { PHONE_DISPLAY, CONTACT_EMAIL } from "@/lib/config";
 
 export default function Location() {
   const { t } = useLanguage();
@@ -38,7 +39,7 @@ export default function Location() {
               {t("location.contactLabel")}
             </h4>
             <p className="text-cream mt-2 text-[15px]">
-              +57 300 000 0000 · hola@ponlounge.co
+              {PHONE_DISPLAY} · {CONTACT_EMAIL}
             </p>
           </div>
         </div>

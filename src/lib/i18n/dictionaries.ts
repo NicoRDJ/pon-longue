@@ -111,6 +111,7 @@ export const dictionaries = {
     "reserve.p3": "Cambios y cancelaciones flexibles hasta 2 horas antes",
     "reserve.directTitle": "¿Prefieres contactarnos directamente?",
     "reserve.name": "Nombre completo",
+    "reserve.email": "Correo (para tu confirmación)",
     "reserve.people": "Número de personas",
     "reserve.date": "Fecha",
     "reserve.time": "Hora",
@@ -118,6 +119,10 @@ export const dictionaries = {
     "reserve.legendOpen": "Disponible",
     "reserve.legendLow": "Pocos cupos",
     "reserve.legendFull": "Lleno",
+    "reserve.chooseDateFirst":
+      "Elige una fecha para ver los horarios disponibles.",
+    "reserve.slotsUnavailable":
+      "No pudimos cargar la disponibilidad en vivo — indícanos la hora que prefieras y la confirmamos manualmente.",
     "reserve.notes": "Notas (opcional)",
     "reserve.channelLabel": "¿Cómo prefieres confirmar?",
     "reserve.channelCall": "Llamada",
@@ -136,6 +141,17 @@ export const dictionaries = {
     "reserve.personPlural": "personas",
     "reserve.icsSummary": "Reserva en PON Lounge",
     "reserve.icsLocation": "PON Lounge, Medellín",
+    "reserve.confirmAuto": "Confirmar reserva",
+    "reserve.confirming": "Confirmando…",
+    "reserve.confirmedTitle": "¡Reserva confirmada!",
+    "reserve.confirmedBody":
+      "Te esperamos. Si nos diste tu correo, ya te enviamos los detalles.",
+    "reserve.errorFull":
+      "Ese horario se acaba de llenar. Elige otra hora disponible.",
+    "reserve.errorGeneric":
+      "No pudimos confirmar automáticamente. Intenta de nuevo o contáctanos directamente abajo.",
+    "reserve.chooseAnotherTime": "Elegir otra hora",
+    "reserve.orContactDirect": "— o contáctanos directamente —",
 
     "wizard.step1": "Ocasión",
     "wizard.step2": "Fecha y hora",
@@ -281,6 +297,7 @@ export const dictionaries = {
     "reserve.p3": "Flexible changes and cancellations up to 2 hours ahead",
     "reserve.directTitle": "Prefer to reach us directly?",
     "reserve.name": "Full name",
+    "reserve.email": "Email (for your confirmation)",
     "reserve.people": "Number of guests",
     "reserve.date": "Date",
     "reserve.time": "Time",
@@ -288,6 +305,9 @@ export const dictionaries = {
     "reserve.legendOpen": "Available",
     "reserve.legendLow": "Few spots left",
     "reserve.legendFull": "Full",
+    "reserve.chooseDateFirst": "Choose a date to see available times.",
+    "reserve.slotsUnavailable":
+      "We couldn't load live availability — tell us your preferred time and we'll confirm manually.",
     "reserve.notes": "Notes (optional)",
     "reserve.channelLabel": "How would you like to confirm?",
     "reserve.channelCall": "Call",
@@ -306,6 +326,17 @@ export const dictionaries = {
     "reserve.personPlural": "guests",
     "reserve.icsSummary": "Reservation at PON Lounge",
     "reserve.icsLocation": "PON Lounge, Medellín",
+    "reserve.confirmAuto": "Confirm reservation",
+    "reserve.confirming": "Confirming…",
+    "reserve.confirmedTitle": "Reservation confirmed!",
+    "reserve.confirmedBody":
+      "We'll see you then. If you gave us your email, we've already sent the details.",
+    "reserve.errorFull":
+      "That time just filled up. Please choose another available slot.",
+    "reserve.errorGeneric":
+      "We couldn't confirm automatically. Try again or reach us directly below.",
+    "reserve.chooseAnotherTime": "Choose another time",
+    "reserve.orContactDirect": "— or reach us directly —",
 
     "wizard.step1": "Occasion",
     "wizard.step2": "Date & time",

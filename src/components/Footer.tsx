@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { PHONE_DISPLAY, CONTACT_EMAIL } from "@/lib/config";
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -45,8 +46,8 @@ export default function Footer() {
             <p className="text-cream-muted mb-2">
               {t("location.addressValue")}
             </p>
-            <p className="text-cream-muted mb-2">+57 300 000 0000</p>
-            <p className="text-cream-muted mb-2">hola@ponlounge.co</p>
+            <p className="text-cream-muted mb-2">{PHONE_DISPLAY}</p>
+            <p className="text-cream-muted mb-2">{CONTACT_EMAIL}</p>
             <div className="mt-3 flex gap-3">
               <a
                 href="#"
