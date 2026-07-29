@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { MenuCategory } from "@/data/menu";
+import MenuItemPhoto from "@/components/MenuItemPhoto";
 
 const currency = new Intl.NumberFormat("es-CO", {
   style: "currency",
@@ -71,18 +72,24 @@ export default function MenuAccordion({
                   {cat.items.map((item) => (
                     <div
                       key={item.name_es}
-                      className="hover:border-brass/35 bg-obsidian flex flex-col gap-3.5 rounded-2xl border border-white/10 p-6 transition-all hover:-translate-y-0.5"
+                      className="hover:border-brass/35 bg-obsidian flex flex-col gap-3.5 overflow-hidden rounded-2xl border border-white/10 p-6 transition-all hover:-translate-y-0.5"
                     >
-                      <span className="text-brass text-[15px]">✦</span>
+                      <MenuItemPhoto
+                        image={item.image}
+                        alt={item[`name_${lang}`]}
+                        className="-mx-6 -mt-6 aspect-[4/3] w-[calc(100%+3rem)] rounded-none"
+                      />
                       <div className="font-display text-cream text-lg">
                         {item[`name_${lang}`]}
                       </div>
                       <p className="text-cream-muted text-[13px] leading-relaxed">
                         {item[`desc_${lang}`]}
                       </p>
-                      <span className="border-brass/35 text-brass-light font-display self-start rounded-full border px-3 py-1 text-[17px]">
-                        {currency.format(item.price)}
-                      </span>
+                      {item.price != null && (
+                        <span className="border-brass/35 text-brass-light font-display self-start rounded-full border px-3 py-1 text-[17px]">
+                          {currency.format(item.price)}
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>

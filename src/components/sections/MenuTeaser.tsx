@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { cocktailMenu } from "@/data/menu";
+import MenuItemPhoto from "@/components/MenuItemPhoto";
 
-const highlights = [
-  { nameKey: "menu.h1Name", descKey: "menu.h1Desc", price: "$48.000" },
-  { nameKey: "menu.h2Name", descKey: "menu.h2Desc", price: "$62.000" },
-  { nameKey: "menu.h3Name", descKey: "menu.h3Desc", price: "$98.000" },
-] as const;
+const houseCocktails = cocktailMenu.find((c) => c.id === "casa")?.items ?? [];
 
 export default function MenuTeaser() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
 
   return (
     <section id="carta-teaser" className="bg-obsidian px-6 py-24">
@@ -49,21 +47,23 @@ export default function MenuTeaser() {
         </div>
 
         <div className="grid gap-4.5">
-          {highlights.map((h) => (
+          {houseCocktails.map((item) => (
             <div
-              key={h.nameKey}
-              className="bg-obsidian-soft flex justify-between gap-4 rounded-2xl border border-white/10 p-5.5"
+              key={item.name_es}
+              className="bg-obsidian-soft flex items-center gap-4.5 rounded-2xl border border-white/10 p-4.5"
             >
+              <MenuItemPhoto
+                image={item.image}
+                alt={item[`name_${lang}`]}
+                className="aspect-square w-[76px] flex-none"
+              />
               <div>
                 <div className="font-display text-cream text-[17px]">
-                  {t(h.nameKey)}
+                  {item[`name_${lang}`]}
                 </div>
                 <div className="text-cream-muted mt-1 text-[13px]">
-                  {t(h.descKey)}
+                  {item[`desc_${lang}`]}
                 </div>
-              </div>
-              <div className="font-display text-brass-light whitespace-nowrap">
-                {h.price}
               </div>
             </div>
           ))}

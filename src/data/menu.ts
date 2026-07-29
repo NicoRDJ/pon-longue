@@ -3,7 +3,13 @@ export interface MenuItem {
   name_en: string;
   desc_es: string;
   desc_en: string;
-  price: number;
+  // Optional: cocktail prices are still being confirmed with the owner.
+  price?: number;
+  // Optional: path under /public once a real photo exists for this item
+  // (e.g. "/carta/dama-de-pon.jpg"). Until then, MenuAccordion/MenuTeaser
+  // render a branded placeholder in its place — set this and the photo
+  // takes over automatically, no other code changes needed.
+  image?: string;
 }
 
 export interface MenuCategory {
@@ -13,46 +19,303 @@ export interface MenuCategory {
   items: MenuItem[];
 }
 
-// Sample menu — replace with PON Lounge's real menu when available.
-// Kept as a typed data module (rather than hardcoded JSX) so it can later
-// be swapped for a CMS/API fetch without touching the rendering components.
-export const menu: MenuCategory[] = [
+// PON Lounge's real cocktail list (from the house recipe book), ordered by
+// priority: house creations first, then the most exclusive spirit-forward
+// categories, down to non-alcoholic. Food/dessert/wine categories below are
+// still sample content pending the client's real menu.
+export const cocktailMenu: MenuCategory[] = [
   {
-    id: "cocteles",
-    es: "Cócteles de Autor",
-    en: "Signature Cocktails",
+    id: "casa",
+    es: "Cócteles de la Casa P.O.N",
+    en: "P.O.N House Cocktails",
     items: [
       {
-        name_es: "Old Fashioned de la Casa",
-        name_en: "House Old Fashioned",
+        name_es: "Dama de P.O.N",
+        name_en: "Dama de P.O.N",
         desc_es:
-          "Whisky reposado, azúcar quemada, bitter de naranja y ralladura de cacao",
-        desc_en: "Aged whisky, charred sugar, orange bitters, cocoa zest",
-        price: 48000,
+          "Licor de almendras con una suavidad aromática y una elegancia que se queda. Un cierre especiado que invita a quedarse una copa más.",
+        desc_en:
+          "Almond liqueur with an aromatic softness and a lingering elegance. A spiced finish that invites one more glass.",
       },
       {
-        name_es: "Golden Martini",
-        name_en: "Golden Martini",
-        desc_es: "Vodka premium, licor de flor de saúco y un toque cítrico",
-        desc_en: "Premium vodka, elderflower liqueur, a citrus touch",
-        price: 46000,
+        name_es: "Pacífico Sour",
+        name_en: "Pacífico Sour",
+        desc_es:
+          "Viche del Pacífico colombiano convertido en un homenaje líquido: carácter, historia y espuma sedosa en cada sorbo.",
+        desc_en:
+          "Viche from Colombia's Pacific coast turned into a liquid tribute: character, history, and silky foam in every sip.",
       },
       {
-        name_es: "Negroni Especial",
-        name_en: "Special Negroni",
-        desc_es: "Gin, vermut rosso, Campari y twist de naranja",
-        desc_en: "Gin, sweet vermouth, Campari, orange twist",
-        price: 44000,
+        name_es: "Viche Tónic",
+        name_en: "Viche Tónic",
+        desc_es:
+          "Viche herbal y fresco, con alma ancestral — el Pacífico colombiano sentido en una copa.",
+        desc_en:
+          "Herbal, fresh viche with an ancestral soul — Colombia's Pacific coast, felt in a glass.",
       },
       {
-        name_es: "Espresso Signature",
-        name_en: "Espresso Signature",
-        desc_es: "Vodka, espresso, licor de café y espuma cremosa",
-        desc_en: "Vodka, espresso, coffee liqueur, creamy foam",
-        price: 45000,
+        name_es: "Viche Colada",
+        name_en: "Viche Colada",
+        desc_es:
+          "Viche envuelto en dulzura tropical. Como una tarde de playa condensada en un solo trago.",
+        desc_en:
+          "Viche wrapped in tropical sweetness. Like a beach afternoon condensed into one drink.",
       },
     ],
   },
+  {
+    id: "caracter",
+    es: "Cócteles de Carácter",
+    en: "Character Cocktails",
+    items: [
+      {
+        name_es: "Negroni",
+        name_en: "Negroni",
+        desc_es:
+          "Gin amargo, intenso y sin concesiones. Para quienes ya saben exactamente lo que quieren.",
+        desc_en:
+          "Bitter, intense gin with no compromises. For those who already know exactly what they want.",
+      },
+      {
+        name_es: "Old Fashioned",
+        name_en: "Old Fashioned",
+        desc_es:
+          "Bourbon, tiempo y un toque de humo. El clásico que nunca pasa de moda.",
+        desc_en:
+          "Bourbon, time, and a touch of smoke. The classic that never goes out of style.",
+      },
+      {
+        name_es: "Mezcalita",
+        name_en: "Mezcalita",
+        desc_es:
+          "Mezcal ahumado y con carácter — para quienes buscan algo con más profundidad.",
+        desc_en:
+          "Smoky mezcal with character — for those looking for something with more depth.",
+      },
+      {
+        name_es: "Dry Martini",
+        name_en: "Dry Martini",
+        desc_es:
+          "Gin frío, directo y elegante. Sofisticación en su forma más pura.",
+        desc_en:
+          "Cold, direct, elegant gin. Sophistication in its purest form.",
+      },
+      {
+        name_es: "Manhattan",
+        name_en: "Manhattan",
+        desc_es:
+          "Whisky aterciopelado y con carácter, para las noches que se disfrutan despacio.",
+        desc_en:
+          "Velvety whiskey with character, for nights meant to be savored slowly.",
+      },
+      {
+        name_es: "Espresso Martini",
+        name_en: "Espresso Martini",
+        desc_es:
+          "Vodka con energía y elegancia en una sola copa — el impulso perfecto para que la noche siga.",
+        desc_en:
+          "Vodka with energy and elegance in one glass — the perfect lift to keep the night going.",
+      },
+    ],
+  },
+  {
+    id: "gintonics",
+    es: "Gin Tonics",
+    en: "Gin & Tonics",
+    items: [
+      {
+        name_es: "Tanqueray London Dry",
+        name_en: "Tanqueray London Dry",
+        desc_es:
+          "Gin botánico, seco y directo — el gin tonic clásico en su máxima expresión.",
+        desc_en:
+          "Botanical, dry gin, straight to the point — the classic gin & tonic at its best.",
+      },
+      {
+        name_es: "Tanqueray No. Ten",
+        name_en: "Tanqueray No. Ten",
+        desc_es:
+          "Gin floral y suave, con un guiño cítrico que lo hace inconfundible.",
+        desc_en:
+          "Floral, smooth gin with a citrus wink that makes it unmistakable.",
+      },
+      {
+        name_es: "Bombay Sapphire",
+        name_en: "Bombay Sapphire",
+        desc_es:
+          "Gin aromático y equilibrado, para quienes disfrutan los detalles.",
+        desc_en: "Aromatic, balanced gin, for those who savor the details.",
+      },
+      {
+        name_es: "Monkey 47",
+        name_en: "Monkey 47",
+        desc_es:
+          "Gin intenso y especiado — carácter puro para los paladares más exigentes.",
+        desc_en:
+          "Intense, spiced gin — pure character for the most demanding palates.",
+      },
+      {
+        name_es: "Hendrick's",
+        name_en: "Hendrick's",
+        desc_es:
+          "Gin fresco y floral, una experiencia sensorial distinta a cualquier otra.",
+        desc_en: "Fresh, floral gin — a sensory experience unlike any other.",
+      },
+    ],
+  },
+  {
+    id: "citricos",
+    es: "Cócteles Cítricos",
+    en: "Citrus Cocktails",
+    items: [
+      {
+        name_es: "Margarita",
+        name_en: "Margarita",
+        desc_es:
+          "Tequila ácido, dulce y con un toque picante — el equilibrio perfecto en cada sorbo.",
+        desc_en:
+          "Sharp, sweet tequila with a hint of spice — perfect balance in every sip.",
+      },
+      {
+        name_es: "Paloma",
+        name_en: "Paloma",
+        desc_es:
+          "Tequila cítrico, burbujeante y refrescante — ideal para una noche ligera.",
+        desc_en:
+          "Citrusy, bubbly tequila — refreshing and light, ideal for an easy night.",
+      },
+      {
+        name_es: "Mojito",
+        name_en: "Mojito",
+        desc_es:
+          "Ron blanco con toda la frescura cubana de siempre — hierbabuena, cítricos y mucha frescura.",
+        desc_en:
+          "White rum with all the classic Cuban freshness — mint, citrus, and plenty of freshness.",
+      },
+      {
+        name_es: "Daiquiri",
+        name_en: "Daiquiri",
+        desc_es:
+          "Ron simple, cítrico y perfectamente balanceado — un clásico que nunca decepciona.",
+        desc_en:
+          "Simple, citrusy, perfectly balanced rum — a classic that never disappoints.",
+      },
+      {
+        name_es: "Moscow Mule",
+        name_en: "Moscow Mule",
+        desc_es:
+          "Vodka picante, cítrico y muy refrescante — servido en su icónico vaso de cobre.",
+        desc_en:
+          "Spicy, citrusy vodka, very refreshing — served in its iconic copper mug.",
+      },
+      {
+        name_es: "Caipirinha",
+        name_en: "Caipirinha",
+        desc_es: "Cachaza directa y rústica, tal como se disfruta en Brasil.",
+        desc_en:
+          "Straightforward, rustic cachaça, just as it's enjoyed in Brazil.",
+      },
+      {
+        name_es: "Caipiroska",
+        name_en: "Caipiroska",
+        desc_es:
+          "Vodka fresco y frutal — la versión suave de la caipirinha clásica.",
+        desc_en:
+          "Fresh, fruity vodka — the smoother take on the classic caipirinha.",
+      },
+      {
+        name_es: "Whisky Sour",
+        name_en: "Whisky Sour",
+        desc_es:
+          "Whisky sedoso, cítrico y con carácter — el equilibrio entre lo dulce y lo fuerte.",
+        desc_en:
+          "Silky, citrusy whiskey with character — the balance between sweet and strong.",
+      },
+      {
+        name_es: "New York Sour",
+        name_en: "New York Sour",
+        desc_es:
+          "Whisky en su versión más elegante: la evolución del sour clásico con un toque final de vino tinto.",
+        desc_en:
+          "Whiskey in its most elegant form: the classic sour's evolution with a red wine float.",
+      },
+    ],
+  },
+  {
+    id: "aperitivos",
+    es: "Aperitivos",
+    en: "Aperitifs",
+    items: [
+      {
+        name_es: "Aperol Spritz",
+        name_en: "Aperol Spritz",
+        desc_es:
+          "Aperol burbujeante con prosecco, ligero y color atardecer — el aperitivo italiano por excelencia.",
+        desc_en:
+          "Bubbly Aperol with prosecco, light and sunset-colored — the quintessential Italian aperitif.",
+      },
+      {
+        name_es: "Mimosa",
+        name_en: "Mimosa",
+        desc_es:
+          "Prosecco simple, elegante y perfecto para brindar en cualquier momento.",
+        desc_en: "Simple, elegant prosecco — perfect for a toast any time.",
+      },
+    ],
+  },
+  {
+    id: "sinlicor",
+    es: "Cócteles Sin Licor",
+    en: "Non-Alcoholic Cocktails",
+    items: [
+      {
+        name_es: "Mojito sin Licor",
+        name_en: "Mojito (Alcohol-Free)",
+        desc_es:
+          "Toda la frescura del mojito clásico, sin una gota de alcohol — hierbabuena, cítricos y mucha efervescencia.",
+        desc_en:
+          "All the freshness of the classic mojito, without a drop of alcohol — mint, citrus, and plenty of fizz.",
+      },
+      {
+        name_es: "Piña Colada sin Licor",
+        name_en: "Piña Colada (Alcohol-Free)",
+        desc_es:
+          "Dulce, tropical y cremosa — un viaje al Caribe en cada sorbo, sin alcohol.",
+        desc_en:
+          "Sweet, tropical, and creamy — a trip to the Caribbean in every sip, alcohol-free.",
+      },
+    ],
+  },
+  {
+    id: "limonadas",
+    es: "Limonadas",
+    en: "Lemonades",
+    items: [
+      {
+        name_es: "Natural",
+        name_en: "Natural",
+        desc_es:
+          "Fresca, ácida y ligera — el respiro perfecto entre copa y copa.",
+        desc_en:
+          "Fresh, tart, and light — the perfect breather between drinks.",
+      },
+      {
+        name_es: "Hierbabuena",
+        name_en: "Mint",
+        desc_es:
+          "Refrescante y aromática, con un toque herbal que despierta los sentidos.",
+        desc_en:
+          "Refreshing and aromatic, with an herbal touch that wakes up the senses.",
+      },
+    ],
+  },
+];
+
+// Sample food/dessert/wine menu — replace with PON Lounge's real menu when
+// available. Kept as a typed data module (rather than hardcoded JSX) so it
+// can later be swapped for a CMS/API fetch without touching the rendering
+// components.
+export const menu: MenuCategory[] = [
   {
     id: "compartir",
     es: "Para Compartir",

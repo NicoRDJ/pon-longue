@@ -42,12 +42,6 @@ export const dictionaries = {
     "menu.ctaFull": "Ver la carta completa",
     "menu.qrNote":
       "El código QR de las mesas apuntará a /carta — la página de carta independiente, lista para imprimir.",
-    "menu.h1Name": "Old Fashioned de la Casa",
-    "menu.h1Desc": "Whisky reposado, azúcar quemada, bitter de naranja",
-    "menu.h2Name": "Tartar de Atún",
-    "menu.h2Desc": "Atún aleta amarilla, aguacate, sésamo tostado",
-    "menu.h3Name": "Lomo Fino a la Parrilla",
-    "menu.h3Desc": "230g, puré de papa criolla, salsa de vino tinto",
 
     "why.eyebrow": "La experiencia PON",
     "why.title": "Todo lo que hace a una noche, inolvidable.",
@@ -228,12 +222,6 @@ export const dictionaries = {
     "menu.ctaFull": "View the full menu",
     "menu.qrNote":
       "The table QR codes will point to /carta — the standalone menu page, print-ready.",
-    "menu.h1Name": "House Old Fashioned",
-    "menu.h1Desc": "Aged whisky, charred sugar, orange bitters",
-    "menu.h2Name": "Tuna Tartare",
-    "menu.h2Desc": "Yellowfin tuna, avocado, toasted sesame",
-    "menu.h3Name": "Grilled Tenderloin",
-    "menu.h3Desc": "230g, criolla potato purée, red wine jus",
 
     "why.eyebrow": "The PON experience",
     "why.title": "Everything that makes a night unforgettable.",

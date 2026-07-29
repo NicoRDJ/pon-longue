@@ -7,7 +7,7 @@ import CartaHero from "@/components/sections/CartaHero";
 import MenuAccordion from "@/components/MenuAccordion";
 import CartaNote from "@/components/CartaNote";
 import CartaFooter from "@/components/CartaFooter";
-import { menu } from "@/data/menu";
+import { cocktailMenu, menu } from "@/data/menu";
 
 export const metadata: Metadata = {
   title: "Carta",
@@ -27,7 +27,7 @@ export default function CartaPage() {
         <CartaHero />
 
         <section className="bg-obsidian px-6 pb-24">
-          <MenuAccordion categories={menu} />
+          <MenuAccordion categories={[...cocktailMenu, ...menu]} />
           <p className="text-cream-muted mt-9 text-center text-sm">
             <CartaNote />
           </p>
