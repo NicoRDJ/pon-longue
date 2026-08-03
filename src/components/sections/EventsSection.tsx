@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import ScrollReveal from "@/components/ScrollReveal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function EventsSection() {
@@ -9,25 +10,13 @@ export default function EventsSection() {
   return (
     <section
       id="eventos"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24"
+      className="overflow-hidden px-6 py-24"
       style={{
         background:
           "linear-gradient(135deg, #1b1310, var(--color-emerald) 130%)",
       }}
     >
-      {/* object-contain (not cover) so the full, uncropped photo shows —
-          the section is tall enough (min-h-screen) to give a portrait
-          photo room to breathe; the gradient above fills any letterboxed
-          edges instead of leaving them blank. */}
-      <Image
-        src="/photos/celebracion-barman.png"
-        alt={t("events.photoAlt")}
-        fill
-        className="object-contain"
-        sizes="100vw"
-      />
-
-      <div className="border-brass/20 relative z-[2] mx-auto max-w-xl rounded-3xl border bg-[rgba(11,13,16,0.72)] px-8 py-10 text-center shadow-[0_20px_50px_rgba(0,0,0,0.45)] backdrop-blur-md">
+      <ScrollReveal className="mx-auto max-w-2xl text-center">
         <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
           <span className="bg-brass h-px w-6" />
           {t("events.eyebrow")}
@@ -42,7 +31,23 @@ export default function EventsSection() {
         >
           {t("events.cta")}
         </a>
-      </div>
+      </ScrollReveal>
+
+      {/* Sized by height + its natural aspect ratio (not full-bleed), so
+          the full photo shows uncropped without leaving large empty
+          gradient margins on wide screens. */}
+      <ScrollReveal
+        delay={150}
+        className="border-brass/35 relative mx-auto mt-14 aspect-[941/1672] h-[56vh] max-h-[560px] min-h-[320px] overflow-hidden rounded-2xl border shadow-[0_25px_60px_rgba(0,0,0,0.5)]"
+      >
+        <Image
+          src="/photos/celebracion-barman.png"
+          alt={t("events.photoAlt")}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 90vw, 560px"
+        />
+      </ScrollReveal>
     </section>
   );
 }

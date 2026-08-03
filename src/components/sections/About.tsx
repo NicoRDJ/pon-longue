@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ParallaxImage from "@/components/ParallaxImage";
+import ScrollReveal from "@/components/ScrollReveal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function About() {
@@ -10,7 +11,7 @@ export default function About() {
   return (
     <section id="nosotros" className="bg-obsidian-soft px-6 py-24">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[0.9fr_1.1fr]">
-        <div className="border-brass/35 relative flex aspect-4/5 items-end overflow-hidden rounded-2xl border p-5.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+        <ScrollReveal className="border-brass/35 relative flex aspect-4/5 items-end overflow-hidden rounded-2xl border p-5.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
           <ParallaxImage
             src="/photos/salon-barra-reloj.png"
             alt={t("about.visualCaption")}
@@ -28,9 +29,9 @@ export default function About() {
           <span className="text-cream relative rounded-full bg-[rgba(11,13,16,0.6)] px-3.5 py-2 text-xs tracking-[0.08em] uppercase backdrop-blur-[6px]">
             {t("about.visualCaption")}
           </span>
-        </div>
+        </ScrollReveal>
 
-        <div>
+        <ScrollReveal delay={120}>
           <div className="text-brass mb-3 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("about.eyebrow")}
@@ -47,7 +48,7 @@ export default function About() {
           >
             {t("about.cta")}
           </Link>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import ParallaxImage from "@/components/ParallaxImage";
+import ScrollReveal from "@/components/ScrollReveal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 
@@ -37,7 +38,7 @@ export default function Gallery() {
   return (
     <section id="galeria" className="bg-obsidian px-6 py-24">
       <div className="mx-auto max-w-6xl">
-        <div className="mx-auto mb-12 max-w-xl text-center">
+        <ScrollReveal className="mx-auto mb-12 max-w-xl text-center">
           <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("gallery.eyebrow")}
@@ -45,32 +46,35 @@ export default function Gallery() {
           <h2 className="font-display text-cream text-3xl sm:text-4xl">
             {t("gallery.title")}
           </h2>
-        </div>
+        </ScrollReveal>
 
         <div className="grid auto-rows-[160px] grid-cols-2 gap-3.5 md:grid-cols-4">
-          {tiles.map((tile) => (
-            <figure
+          {tiles.map((tile, i) => (
+            <ScrollReveal
               key={tile.captionKey}
-              className={`relative m-0 flex items-end overflow-hidden rounded-xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)] ${tile.span}`}
+              delay={i * 60}
+              className={tile.span}
             >
-              <ParallaxImage
-                src={tile.image}
-                alt={t(tile.captionKey)}
-                className="absolute inset-0"
-                sizes="(max-width: 768px) 50vw, 25vw"
-                strength={14}
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(0deg, rgba(11,13,16,0.65), rgba(11,13,16,0) 55%)",
-                }}
-              />
-              <figcaption className="text-cream relative rounded-full bg-[rgba(11,13,16,0.55)] px-2.5 py-1.5 text-xs tracking-[0.04em] uppercase backdrop-blur-[4px]">
-                {t(tile.captionKey)}
-              </figcaption>
-            </figure>
+              <figure className="relative m-0 flex h-full items-end overflow-hidden rounded-xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+                <ParallaxImage
+                  src={tile.image}
+                  alt={t(tile.captionKey)}
+                  className="absolute inset-0"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  strength={14}
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(0deg, rgba(11,13,16,0.65), rgba(11,13,16,0) 55%)",
+                  }}
+                />
+                <figcaption className="text-cream relative rounded-full bg-[rgba(11,13,16,0.55)] px-2.5 py-1.5 text-xs tracking-[0.04em] uppercase backdrop-blur-[4px]">
+                  {t(tile.captionKey)}
+                </figcaption>
+              </figure>
+            </ScrollReveal>
           ))}
         </div>
       </div>

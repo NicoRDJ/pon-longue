@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cocktailMenu } from "@/data/menu";
 import MenuItemPhoto from "@/components/MenuItemPhoto";
+import ScrollReveal from "@/components/ScrollReveal";
 
 const houseCocktails = cocktailMenu.find((c) => c.id === "casa")?.items ?? [];
 
@@ -13,7 +14,7 @@ export default function MenuTeaser() {
   return (
     <section id="carta-teaser" className="bg-obsidian px-6 py-24">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[1.05fr_0.95fr]">
-        <div>
+        <ScrollReveal>
           <div className="text-brass mb-3 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("menu.eyebrow")}
@@ -44,28 +45,27 @@ export default function MenuTeaser() {
             </span>
             <span>{t("menu.qrNote")}</span>
           </div>
-        </div>
+        </ScrollReveal>
 
         <div className="grid gap-4.5">
-          {houseCocktails.map((item) => (
-            <div
-              key={item.name_es}
-              className="bg-obsidian-soft flex items-center gap-4.5 rounded-2xl border border-white/10 p-4.5"
-            >
-              <MenuItemPhoto
-                image={item.image}
-                alt={item[`name_${lang}`]}
-                className="aspect-square w-[76px] flex-none"
-              />
-              <div>
-                <div className="font-display text-cream text-[17px]">
-                  {item[`name_${lang}`]}
-                </div>
-                <div className="text-cream-muted mt-1 text-[13px]">
-                  {item[`desc_${lang}`]}
+          {houseCocktails.map((item, i) => (
+            <ScrollReveal key={item.name_es} delay={120 + i * 90}>
+              <div className="bg-obsidian-soft flex items-center gap-4.5 rounded-2xl border border-white/10 p-4.5">
+                <MenuItemPhoto
+                  image={item.image}
+                  alt={item[`name_${lang}`]}
+                  className="aspect-square w-[76px] flex-none"
+                />
+                <div>
+                  <div className="font-display text-cream text-[17px]">
+                    {item[`name_${lang}`]}
+                  </div>
+                  <div className="text-cream-muted mt-1 text-[13px]">
+                    {item[`desc_${lang}`]}
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
