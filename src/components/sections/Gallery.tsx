@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ParallaxImage from "@/components/ParallaxImage";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 
@@ -28,6 +28,7 @@ const tiles = [
     span: "",
   },
   { captionKey: "gallery.c7", image: "/photos/servicio-mesera.png", span: "" },
+  { captionKey: "gallery.c8", image: "/photos/licores-premium.png", span: "" },
 ] satisfies { captionKey: DictKey; image: string; span: string }[];
 
 export default function Gallery() {
@@ -52,12 +53,12 @@ export default function Gallery() {
               key={tile.captionKey}
               className={`relative m-0 flex items-end overflow-hidden rounded-xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)] ${tile.span}`}
             >
-              <Image
+              <ParallaxImage
                 src={tile.image}
                 alt={t(tile.captionKey)}
-                fill
-                className="object-cover"
+                className="absolute inset-0"
                 sizes="(max-width: 768px) 50vw, 25vw"
+                strength={14}
               />
               <div
                 className="absolute inset-0"

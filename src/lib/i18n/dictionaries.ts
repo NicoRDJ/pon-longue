@@ -61,6 +61,8 @@ export const dictionaries = {
     "events.lead":
       "Cumpleaños, lanzamientos, despedidas o reuniones corporativas: adaptamos el espacio y la carta para tu grupo.",
     "events.cta": "Cotizar mi evento",
+    "events.photoAlt":
+      "Bartender de PON Lounge presentando cócteles de la casa",
 
     "testimonials.eyebrow": "Lo que dicen",
     "testimonials.title": "Noches que se recuerdan.",
@@ -85,6 +87,7 @@ export const dictionaries = {
     "gallery.c5": "Coctel de autor",
     "gallery.c6": "Ambiente nocturno",
     "gallery.c7": "Servicio",
+    "gallery.c8": "Licores premium",
 
     "location.eyebrow": "Ubicación",
     "location.title": "Encuéntranos en Medellín.",
@@ -239,6 +242,7 @@ export const dictionaries = {
     "events.lead":
       "Birthdays, launches, farewells or corporate gatherings: we adapt the space and the menu for your group.",
     "events.cta": "Get an event quote",
+    "events.photoAlt": "PON Lounge bartender presenting the house cocktails",
 
     "testimonials.eyebrow": "What people say",
     "testimonials.title": "Nights worth remembering.",
@@ -263,6 +267,7 @@ export const dictionaries = {
     "gallery.c5": "Signature cocktail",
     "gallery.c6": "Night ambiance",
     "gallery.c7": "Service",
+    "gallery.c8": "Premium spirits",
 
     "location.eyebrow": "Location",
     "location.title": "Find us in Medellín.",

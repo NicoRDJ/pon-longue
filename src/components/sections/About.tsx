@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import ParallaxImage from "@/components/ParallaxImage";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function About() {
@@ -11,13 +11,12 @@ export default function About() {
     <section id="nosotros" className="bg-obsidian-soft px-6 py-24">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[0.9fr_1.1fr]">
         <div className="border-brass/35 relative flex aspect-4/5 items-end overflow-hidden rounded-2xl border p-5.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
-          <Image
+          <ParallaxImage
             src="/photos/salon-barra-reloj.png"
             alt={t("about.visualCaption")}
-            fill
-            priority
-            className="object-cover"
+            className="absolute inset-0"
             sizes="(max-width: 768px) 100vw, 520px"
+            strength={20}
           />
           <div
             className="absolute inset-0"
