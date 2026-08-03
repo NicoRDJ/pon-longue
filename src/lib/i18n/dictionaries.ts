@@ -78,15 +78,13 @@ export const dictionaries = {
 
     "gallery.eyebrow": "Galería",
     "gallery.title": "El lugar, la mesa, el momento.",
-    "gallery.sampleNote":
-      "Imágenes de referencia — se reemplazarán por fotos reales del lugar.",
     "gallery.c1": "Salón principal",
     "gallery.c2": "Barra de cócteles",
     "gallery.c3": "Zona VIP",
     "gallery.c4": "Barra abierta",
     "gallery.c5": "Coctel de autor",
     "gallery.c6": "Ambiente nocturno",
-    "gallery.c7": "Plato de la casa",
+    "gallery.c7": "Servicio",
 
     "location.eyebrow": "Ubicación",
     "location.title": "Encuéntranos en Medellín.",
@@ -258,15 +256,13 @@ export const dictionaries = {
 
     "gallery.eyebrow": "Gallery",
     "gallery.title": "The place, the table, the moment.",
-    "gallery.sampleNote":
-      "Reference images — will be replaced with real photos of the venue.",
     "gallery.c1": "Main room",
     "gallery.c2": "Cocktail bar",
     "gallery.c3": "VIP area",
     "gallery.c4": "Open bar",
     "gallery.c5": "Signature cocktail",
     "gallery.c6": "Night ambiance",
-    "gallery.c7": "House dish",
+    "gallery.c7": "Service",
 
     "location.eyebrow": "Location",
     "location.title": "Find us in Medellín.",

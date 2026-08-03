@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -9,14 +10,23 @@ export default function About() {
   return (
     <section id="nosotros" className="bg-obsidian-soft px-6 py-24">
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[0.9fr_1.1fr]">
-        <div
-          className="border-brass/35 relative flex aspect-4/5 items-end rounded-2xl border p-5.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
-          style={{
-            background:
-              "linear-gradient(160deg, rgba(11,13,16,0.1), rgba(11,13,16,0.35)), linear-gradient(135deg, var(--color-brass-light), var(--color-emerald) 55%, var(--color-obsidian) 100%)",
-          }}
-        >
-          <span className="text-cream rounded-full bg-[rgba(11,13,16,0.6)] px-3.5 py-2 text-xs tracking-[0.08em] uppercase backdrop-blur-[6px]">
+        <div className="border-brass/35 relative flex aspect-4/5 items-end overflow-hidden rounded-2xl border p-5.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+          <Image
+            src="/photos/salon-barra-reloj.png"
+            alt={t("about.visualCaption")}
+            fill
+            priority
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 520px"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(160deg, rgba(11,13,16,0), rgba(11,13,16,0.55))",
+            }}
+          />
+          <span className="text-cream relative rounded-full bg-[rgba(11,13,16,0.6)] px-3.5 py-2 text-xs tracking-[0.08em] uppercase backdrop-blur-[6px]">
             {t("about.visualCaption")}
           </span>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import ClockMark from "@/components/ClockMark";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -11,6 +12,21 @@ export default function Hero() {
       id="top"
       className="bg-obsidian relative flex min-h-screen items-center overflow-hidden"
     >
+      <Image
+        src="/photos/hero-reloj-tiempo.png"
+        alt=""
+        fill
+        priority
+        className="object-cover opacity-35"
+        sizes="100vw"
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(100deg, rgba(11,13,16,0.97) 0%, rgba(11,13,16,0.88) 40%, rgba(11,13,16,0.55) 75%, rgba(11,13,16,0.3) 100%)",
+        }}
+      />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
