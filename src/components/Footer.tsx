@@ -2,7 +2,21 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { PHONE_DISPLAY, CONTACT_EMAIL } from "@/lib/config";
+import {
+  PHONE_DISPLAY,
+  CONTACT_EMAIL,
+  WHATSAPP_NUMBER,
+  INSTAGRAM_URL,
+  FACEBOOK_URL,
+  TIKTOK_URL,
+} from "@/lib/config";
+
+const socialLinks = [
+  { label: "Instagram", short: "IG", href: INSTAGRAM_URL },
+  { label: "Facebook", short: "FB", href: FACEBOOK_URL },
+  { label: "TikTok", short: "TT", href: TIKTOK_URL },
+  { label: "WhatsApp", short: "WA", href: `https://wa.me/${WHATSAPP_NUMBER}` },
+] as const;
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -49,20 +63,20 @@ export default function Footer() {
             <p className="text-cream-muted mb-2">{PHONE_DISPLAY}</p>
             <p className="text-cream-muted mb-2">{CONTACT_EMAIL}</p>
             <div className="mt-3 flex gap-3">
-              <a
-                href="#"
-                aria-label="Instagram"
-                className="hover:border-brass hover:text-brass-light flex h-9 w-9 items-center justify-center rounded-full border border-white/15"
-              >
-                IG
-              </a>
-              <a
-                href="#"
-                aria-label="WhatsApp"
-                className="hover:border-brass hover:text-brass-light flex h-9 w-9 items-center justify-center rounded-full border border-white/15"
-              >
-                WA
-              </a>
+              {socialLinks
+                .filter((social) => social.href)
+                .map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="hover:border-brass hover:text-brass-light flex h-9 w-9 items-center justify-center rounded-full border border-white/15"
+                  >
+                    {social.short}
+                  </a>
+                ))}
             </div>
           </div>
         </div>

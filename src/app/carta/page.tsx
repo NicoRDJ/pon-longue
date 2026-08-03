@@ -12,8 +12,11 @@ import { cocktailMenu, menu } from "@/data/menu";
 export const metadata: Metadata = {
   title: "Carta",
   description:
-    "Carta de PON Lounge: cócteles de autor, platos para compartir, fuertes, postres y vinos. Precios en pesos colombianos.",
-  robots: { index: false, follow: false },
+    "Carta de PON Lounge: cócteles de la casa, clásicos de autor, gin tonics, cítricos, mocktails y más. Precios en pesos colombianos.",
+  robots: {
+    index: process.env.NEXT_PUBLIC_ENV === "production",
+    follow: process.env.NEXT_PUBLIC_ENV === "production",
+  },
 };
 
 export default function CartaPage() {
