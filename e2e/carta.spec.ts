@@ -13,12 +13,12 @@ test.describe("Carta page", () => {
     page,
   }) => {
     await page.goto("/carta");
-    const triggers = page.getByRole("button", {
-      name: /Para Compartir|Cócteles de Autor/,
-    });
+    const triggers = page.locator("[aria-controls^='acc-panel-']");
+    await expect(triggers.first()).toHaveAttribute("aria-expanded", "true");
+
     await triggers.nth(1).click();
     await expect(triggers.nth(1)).toHaveAttribute("aria-expanded", "true");
-    await expect(triggers.nth(0)).toHaveAttribute("aria-expanded", "false");
+    await expect(triggers.first()).toHaveAttribute("aria-expanded", "false");
   });
 
   test("has no console errors on load", async ({ page }) => {

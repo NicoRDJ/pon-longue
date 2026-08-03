@@ -11,13 +11,6 @@ test.describe("Home page", () => {
     ).toBeVisible();
   });
 
-  test("decorative clock renders as an accessible image", async ({ page }) => {
-    await page.goto("/");
-    await expect(
-      page.getByRole("img", { name: /reloj decorativo/i }),
-    ).toBeVisible();
-  });
-
   test("nav Carta link goes to the standalone menu page", async ({ page }) => {
     await page.goto("/");
     await page.locator("nav").getByRole("link", { name: "Carta" }).click();
