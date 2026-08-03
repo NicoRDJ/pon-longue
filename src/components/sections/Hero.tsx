@@ -1,6 +1,5 @@
 "use client";
 
-import ClockMark from "@/components/ClockMark";
 import ParallaxImage from "@/components/ParallaxImage";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -34,8 +33,8 @@ export default function Hero() {
         }}
       />
 
-      <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-16 px-6 pt-40 pb-20 md:grid-cols-[1.1fr_0.9fr]">
-        <div>
+      <div className="relative mx-auto w-full max-w-6xl px-6 pt-40 pb-20">
+        <div className="max-w-2xl">
           <div className="text-brass mb-6 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("hero.eyebrow")}
@@ -94,10 +93,6 @@ export default function Hero() {
               </span>
             </div>
           </div>
-        </div>
-
-        <div className="mx-auto w-full max-w-sm md:max-w-none">
-          <ClockMark className="mx-auto w-full max-w-[360px] drop-shadow-[0_20px_60px_rgba(185,141,75,0.15)]" />
         </div>
       </div>
     </section>
