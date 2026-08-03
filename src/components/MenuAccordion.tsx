@@ -4,12 +4,8 @@ import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { MenuCategory } from "@/data/menu";
 import MenuItemPhoto from "@/components/MenuItemPhoto";
-
-const currency = new Intl.NumberFormat("es-CO", {
-  style: "currency",
-  currency: "COP",
-  maximumFractionDigits: 0,
-});
+import MenuItemModal, { type MenuItemDetail } from "@/components/MenuItemModal";
+import { formatCOP } from "@/lib/currency";
 
 export default function MenuAccordion({
   categories,
@@ -20,6 +16,7 @@ export default function MenuAccordion({
   const [openId, setOpenId] = useState<string | null>(
     categories[0]?.id ?? null,
   );
+  const [selected, setSelected] = useState<MenuItemDetail | null>(null);
 
   function toggle(id: string) {
     setOpenId((current) => (current === id ? null : id));
@@ -70,9 +67,18 @@ export default function MenuAccordion({
               >
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {cat.items.map((item) => (
-                    <div
+                    <button
+                      type="button"
                       key={item.name_es}
-                      className="hover:border-brass/35 bg-obsidian flex flex-col gap-3.5 overflow-hidden rounded-2xl border border-white/10 p-6 transition-all hover:-translate-y-0.5"
+                      onClick={() =>
+                        setSelected({
+                          name: item[`name_${lang}`],
+                          desc: item[`desc_${lang}`],
+                          price: item.price,
+                          image: item.image,
+                        })
+                      }
+                      className="hover:border-brass/35 bg-obsidian flex flex-col gap-3.5 overflow-hidden rounded-2xl border border-white/10 p-6 text-left transition-all hover:-translate-y-0.5"
                     >
                       <MenuItemPhoto
                         image={item.image}
@@ -87,10 +93,10 @@ export default function MenuAccordion({
                       </p>
                       {item.price != null && (
                         <span className="border-brass/35 text-brass-light font-display self-start rounded-full border px-3 py-1 text-[17px]">
-                          {currency.format(item.price)}
+                          {formatCOP(item.price)}
                         </span>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -98,6 +104,10 @@ export default function MenuAccordion({
           </div>
         );
       })}
+
+      {selected && (
+        <MenuItemModal item={selected} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }

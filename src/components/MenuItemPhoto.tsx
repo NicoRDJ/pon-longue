@@ -7,10 +7,12 @@ export default function MenuItemPhoto({
   image,
   alt,
   className = "aspect-[4/3] w-full",
+  sizes = "(max-width: 768px) 50vw, 320px",
 }: {
   image?: string;
   alt: string;
   className?: string;
+  sizes?: string;
 }) {
   return (
     <div className={`relative overflow-hidden rounded-xl ${className}`}>
@@ -20,7 +22,7 @@ export default function MenuItemPhoto({
           alt={alt}
           fill
           className="object-cover"
-          sizes="(max-width: 768px) 50vw, 320px"
+          sizes={sizes}
         />
       ) : (
         <div
