@@ -2,7 +2,9 @@
 
 import ScrollReveal from "@/components/ScrollReveal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { PHONE_DISPLAY, CONTACT_EMAIL } from "@/lib/config";
+import { PHONE_DISPLAY, CONTACT_EMAIL, ADDRESS_LINE } from "@/lib/config";
+
+const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(ADDRESS_LINE)}&output=embed`;
 
 export default function Location() {
   const { t } = useLanguage();
@@ -23,9 +25,7 @@ export default function Location() {
             <h4 className="text-brass font-sans text-xs font-bold tracking-[0.1em] uppercase">
               {t("location.addressLabel")}
             </h4>
-            <p className="text-cream mt-2 text-[15px]">
-              {t("location.addressValue")}
-            </p>
+            <p className="text-cream mt-2 text-[15px]">{ADDRESS_LINE}</p>
           </div>
           <div className="bg-obsidian rounded-2xl border border-white/10 p-5.5">
             <h4 className="text-brass font-sans text-xs font-bold tracking-[0.1em] uppercase">
@@ -52,7 +52,7 @@ export default function Location() {
           <iframe
             title="Mapa PON Lounge"
             loading="lazy"
-            src="https://www.google.com/maps?q=Medell%C3%ADn,+Colombia&output=embed"
+            src={mapSrc}
             className="h-full min-h-[380px] w-full border-0 [filter:saturate(0.8)_contrast(1.05)_brightness(0.95)]"
           />
         </ScrollReveal>

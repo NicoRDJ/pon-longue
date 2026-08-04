@@ -5,6 +5,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import {
   PHONE_DISPLAY,
   CONTACT_EMAIL,
+  ADDRESS_LINE,
   WHATSAPP_NUMBER,
   INSTAGRAM_URL,
   FACEBOOK_URL,
@@ -57,9 +58,7 @@ export default function Footer() {
             <h5 className="text-cream mb-4 text-xs tracking-[0.1em] uppercase">
               {t("footer.contactTitle")}
             </h5>
-            <p className="text-cream-muted mb-2">
-              {t("location.addressValue")}
-            </p>
+            <p className="text-cream-muted mb-2">{ADDRESS_LINE}</p>
             <p className="text-cream-muted mb-2">{PHONE_DISPLAY}</p>
             <p className="text-cream-muted mb-2">{CONTACT_EMAIL}</p>
             <div className="mt-3 flex gap-3">

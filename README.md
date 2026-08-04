@@ -17,8 +17,8 @@ TypeScript + Tailwind CSS v4, deployable on Vercel.
 - **Palette:** obsidian black + brass/gold, with a deep emerald accent.
   Typography: Playfair Display (headings) + Inter (body).
 
-The cocktail menu (`src/data/menu.ts` → `cocktailMenu`) is the client's real
-recipe list. Food, gallery, testimonials, and real address/contact are still
+The cocktail menu (`src/data/menu.ts` → `cocktailMenu`), gallery photos, and
+address are the client's real info. Food and testimonials are still
 placeholder/sample content pending the client's real information — clearly
 marked in the UI (preview banners, "sample" notes) so it's obvious what
 still needs replacing.

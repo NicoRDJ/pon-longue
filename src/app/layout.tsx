@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
-import { PHONE_E164, CONTACT_EMAIL } from "@/lib/config";
+import { PHONE_E164, CONTACT_EMAIL, ADDRESS_LINE } from "@/lib/config";
 import { VENUE_OPEN_TIME } from "@/lib/hours";
 import "./globals.css";
 
@@ -59,9 +59,8 @@ export const metadata: Metadata = {
 };
 
 // LocalBusiness structured data (schema.org) so Google can show PON Lounge
-// as a rich result — hours/phone/email are the same values shown in the
-// UI (src/lib/hours.ts, src/lib/config.ts), address is still a
-// placeholder pending the client's real address (see PreviewBanner).
+// as a rich result — hours/phone/email/address are the same values shown
+// in the UI (src/lib/hours.ts, src/lib/config.ts).
 const businessJsonLd = {
   "@context": "https://schema.org",
   "@type": "BarOrPub",
@@ -74,7 +73,9 @@ const businessJsonLd = {
   priceRange: "$$$",
   address: {
     "@type": "PostalAddress",
+    streetAddress: ADDRESS_LINE.split(",")[0],
     addressLocality: "Medellín",
+    addressRegion: "Antioquia",
     addressCountry: "CO",
   },
   openingHoursSpecification: [

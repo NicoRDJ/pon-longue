@@ -13,6 +13,10 @@ export const PHONE_DISPLAY =
 export const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_RESERVATIONS_EMAIL ?? "hola@ponlounge.co";
 
+export const ADDRESS_LINE =
+  process.env.NEXT_PUBLIC_ADDRESS ??
+  "Cra 44 #20-28, Distrito Vera, El Poblado, Medellín, Colombia";
+
 // Social links — unset (undefined) until the client shares the real
 // handles. Components should skip rendering a link whose value is
 // undefined rather than pointing it at "#".
