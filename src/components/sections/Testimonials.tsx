@@ -18,14 +18,14 @@ export default function Testimonials() {
       <ParallaxImage
         src="/photos/relojes-colgantes.png"
         alt=""
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-35"
         strength={16}
       />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(20,24,29,0.8), rgba(20,24,29,0.95))",
+            "linear-gradient(180deg, rgba(20,24,29,0.65), rgba(20,24,29,0.9))",
         }}
       />
       <div className="relative mx-auto max-w-6xl">

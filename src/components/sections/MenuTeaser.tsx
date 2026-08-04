@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { cocktailMenu } from "@/data/menu";
 import MenuItemPhoto from "@/components/MenuItemPhoto";
+import ParallaxImage from "@/components/ParallaxImage";
 import ScrollReveal from "@/components/ScrollReveal";
 
 const houseCocktails = cocktailMenu.find((c) => c.id === "casa")?.items ?? [];
@@ -12,8 +13,24 @@ export default function MenuTeaser() {
   const { lang, t } = useLanguage();
 
   return (
-    <section id="carta-teaser" className="bg-obsidian px-6 py-24">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[1.05fr_0.95fr]">
+    <section
+      id="carta-teaser"
+      className="bg-obsidian relative overflow-hidden px-6 py-24"
+    >
+      <ParallaxImage
+        src="/photos/pared-relojes-noche.png"
+        alt=""
+        className="absolute inset-0 opacity-35"
+        strength={16}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(100deg, rgba(11,13,16,0.92), rgba(11,13,16,0.65) 55%, rgba(11,13,16,0.9))",
+        }}
+      />
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[1.05fr_0.95fr]">
         <ScrollReveal>
           <div className="text-brass mb-3 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />

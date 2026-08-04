@@ -16,6 +16,7 @@ import {
   WHATSAPP_NUMBER,
 } from "@/lib/config";
 import { VENUE_OPEN_TIME, LAST_RESERVATION_TIME } from "@/lib/hours";
+import ParallaxImage from "@/components/ParallaxImage";
 
 const STEPS = [
   { n: 1, key: "wizard.step1" },
@@ -286,8 +287,24 @@ export default function ReservationWizard() {
         : "reserve.submitWhatsapp";
 
   return (
-    <section id="reservas" className="bg-obsidian px-6 py-24">
-      <div className="mx-auto max-w-6xl">
+    <section
+      id="reservas"
+      className="bg-obsidian relative overflow-hidden px-6 py-24"
+    >
+      <ParallaxImage
+        src="/photos/coctel-de-autor.png"
+        alt=""
+        className="absolute inset-0 opacity-30"
+        strength={16}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(11,13,16,0.6), rgba(11,13,16,0.92))",
+        }}
+      />
+      <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto mb-12 max-w-xl text-center">
           <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />

@@ -1,19 +1,28 @@
 "use client";
 
 import Link from "next/link";
+import ParallaxImage from "@/components/ParallaxImage";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function CartaHero() {
   const { t } = useLanguage();
 
   return (
-    <section
-      className="px-6 pt-40 pb-10 text-center"
-      style={{
-        background: "linear-gradient(180deg, #0a0a0c, var(--color-obsidian))",
-      }}
-    >
-      <div className="mx-auto max-w-3xl">
+    <section className="relative overflow-hidden px-6 pt-40 pb-10 text-center">
+      <ParallaxImage
+        src="/photos/salon-barra-reloj.png"
+        alt=""
+        className="absolute inset-0 opacity-30"
+        strength={16}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(10,10,12,0.88), var(--color-obsidian))",
+        }}
+      />
+      <div className="relative mx-auto max-w-3xl">
         <div className="text-brass mb-3.5 inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
           <span className="bg-brass h-px w-6" />
           {t("menu.eyebrow")}

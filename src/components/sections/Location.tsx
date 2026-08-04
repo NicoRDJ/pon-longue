@@ -1,5 +1,6 @@
 "use client";
 
+import ParallaxImage from "@/components/ParallaxImage";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { PHONE_DISPLAY, CONTACT_EMAIL, ADDRESS_LINE } from "@/lib/config";
@@ -10,8 +11,24 @@ export default function Location() {
   const { t } = useLanguage();
 
   return (
-    <section id="ubicacion" className="bg-obsidian-soft px-6 py-24">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-12.5 md:grid-cols-[0.9fr_1.1fr]">
+    <section
+      id="ubicacion"
+      className="bg-obsidian-soft relative overflow-hidden px-6 py-24"
+    >
+      <ParallaxImage
+        src="/photos/zona-lounge.png"
+        alt=""
+        className="absolute inset-0 opacity-35"
+        strength={16}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(100deg, rgba(20,24,29,0.92), rgba(20,24,29,0.6) 55%, rgba(20,24,29,0.9))",
+        }}
+      />
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-12.5 md:grid-cols-[0.9fr_1.1fr]">
         <ScrollReveal className="grid content-start gap-5.5">
           <div className="text-brass inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
             <span className="bg-brass h-px w-6" />
