@@ -55,7 +55,7 @@ export default function Gallery() {
               delay={i * 60}
               className={tile.span}
             >
-              <figure className="relative m-0 flex h-full items-end overflow-hidden rounded-xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+              <figure className="relative m-0 h-full overflow-hidden rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
                 <ParallaxImage
                   src={tile.image}
                   alt={t(tile.captionKey)}
@@ -63,16 +63,6 @@ export default function Gallery() {
                   sizes="(max-width: 768px) 50vw, 25vw"
                   strength={14}
                 />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      "linear-gradient(0deg, rgba(11,13,16,0.65), rgba(11,13,16,0) 55%)",
-                  }}
-                />
-                <figcaption className="text-cream relative rounded-full bg-[rgba(11,13,16,0.55)] px-2.5 py-1.5 text-xs tracking-[0.04em] uppercase backdrop-blur-[4px]">
-                  {t(tile.captionKey)}
-                </figcaption>
               </figure>
             </ScrollReveal>
           ))}
