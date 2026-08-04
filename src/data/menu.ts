@@ -10,6 +10,11 @@ export interface MenuItem {
   // render a branded placeholder in its place — set this and the photo
   // takes over automatically, no other code changes needed.
   image?: string;
+  // Optional: groups items under a sub-heading within a category (e.g.
+  // "Platos" separated into Entradas/Para Compartir/Fuertes) without
+  // splitting it into its own accordion category.
+  subcategory_es?: string;
+  subcategory_en?: string;
 }
 
 export interface MenuCategory {
@@ -317,9 +322,9 @@ export const cocktailMenu: MenuCategory[] = [
 // components.
 export const menu: MenuCategory[] = [
   {
-    id: "compartir",
-    es: "Para Compartir",
-    en: "To Share",
+    id: "platos",
+    es: "Platos",
+    en: "Dishes",
     items: [
       {
         name_es: "Tartar de Atún",
@@ -327,6 +332,8 @@ export const menu: MenuCategory[] = [
         desc_es: "Atún aleta amarilla, aguacate, sésamo tostado y ají amarillo",
         desc_en: "Yellowfin tuna, avocado, toasted sesame, yellow chili",
         price: 62000,
+        subcategory_es: "Para Compartir",
+        subcategory_en: "To Share",
       },
       {
         name_es: "Croquetas de Costilla",
@@ -334,6 +341,8 @@ export const menu: MenuCategory[] = [
         desc_es: "Costilla desmechada, salsa BBQ de café y alioli ahumado",
         desc_en: "Braised short rib, coffee BBQ sauce, smoked aioli",
         price: 45000,
+        subcategory_es: "Para Compartir",
+        subcategory_en: "To Share",
       },
       {
         name_es: "Tabla de Quesos & Embutidos",
@@ -341,6 +350,8 @@ export const menu: MenuCategory[] = [
         desc_es: "Selección premium, mermeladas de la casa y pan artesanal",
         desc_en: "Premium selection, house preserves, artisan bread",
         price: 78000,
+        subcategory_es: "Para Compartir",
+        subcategory_en: "To Share",
       },
       {
         name_es: "Camarones al Ajillo",
@@ -348,20 +359,17 @@ export const menu: MenuCategory[] = [
         desc_es: "Camarones salteados, ajo confitado y pan tostado",
         desc_en: "Sautéed shrimp, confit garlic, toasted bread",
         price: 58000,
+        subcategory_es: "Para Compartir",
+        subcategory_en: "To Share",
       },
-    ],
-  },
-  {
-    id: "ligeros",
-    es: "Platos Ligeros",
-    en: "Light Bites",
-    items: [
       {
         name_es: "Ceviche de Camarón",
         name_en: "Shrimp Ceviche",
         desc_es: "Camarón, leche de tigre cítrica, cebolla morada y cilantro",
         desc_en: "Shrimp, citrus leche de tigre, red onion, cilantro",
         price: 42000,
+        subcategory_es: "Entradas y Ligeros",
+        subcategory_en: "Starters & Light Bites",
       },
       {
         name_es: "Tostadas de Atún",
@@ -369,6 +377,8 @@ export const menu: MenuCategory[] = [
         desc_es: "Atún sellado, aguacate, sésamo y alioli picante",
         desc_en: "Seared tuna, avocado, sesame, spicy aioli",
         price: 38000,
+        subcategory_es: "Entradas y Ligeros",
+        subcategory_en: "Starters & Light Bites",
       },
       {
         name_es: "Ensalada César con Pollo",
@@ -376,6 +386,8 @@ export const menu: MenuCategory[] = [
         desc_es: "Pollo a la parrilla, parmesano, crocantes de tocineta",
         desc_en: "Grilled chicken, parmesan, bacon crisps",
         price: 34000,
+        subcategory_es: "Entradas y Ligeros",
+        subcategory_en: "Starters & Light Bites",
       },
       {
         name_es: "Hummus de la Casa",
@@ -383,6 +395,36 @@ export const menu: MenuCategory[] = [
         desc_es: "Garbanzo, tahini, aceite de oliva y pan pita tostado",
         desc_en: "Chickpea, tahini, olive oil, toasted pita",
         price: 28000,
+        subcategory_es: "Entradas y Ligeros",
+        subcategory_en: "Starters & Light Bites",
+      },
+      {
+        name_es: "Lomo Fino a la Parrilla",
+        name_en: "Grilled Tenderloin",
+        desc_es:
+          "230g, puré de papa criolla, vegetales asados y salsa de vino tinto",
+        desc_en: "230g, criolla potato purée, roasted vegetables, red wine jus",
+        price: 98000,
+        subcategory_es: "Platos Fuertes",
+        subcategory_en: "Main Courses",
+      },
+      {
+        name_es: "Risotto de Champiñones",
+        name_en: "Wild Mushroom Risotto",
+        desc_es: "Champiñones silvestres, parmesano añejo y aceite de trufa",
+        desc_en: "Wild mushrooms, aged parmesan, truffle oil",
+        price: 76000,
+        subcategory_es: "Platos Fuertes",
+        subcategory_en: "Main Courses",
+      },
+      {
+        name_es: "Salmón a la Plancha",
+        name_en: "Grilled Salmon",
+        desc_es: "Salmón noruego, quinoa tricolor y beurre blanc",
+        desc_en: "Norwegian salmon, tri-color quinoa, beurre blanc",
+        price: 89000,
+        subcategory_es: "Platos Fuertes",
+        subcategory_en: "Main Courses",
       },
     ],
   },
@@ -422,35 +464,6 @@ export const menu: MenuCategory[] = [
     ],
   },
   {
-    id: "fuertes",
-    es: "Platos Fuertes",
-    en: "Main Courses",
-    items: [
-      {
-        name_es: "Lomo Fino a la Parrilla",
-        name_en: "Grilled Tenderloin",
-        desc_es:
-          "230g, puré de papa criolla, vegetales asados y salsa de vino tinto",
-        desc_en: "230g, criolla potato purée, roasted vegetables, red wine jus",
-        price: 98000,
-      },
-      {
-        name_es: "Risotto de Champiñones",
-        name_en: "Wild Mushroom Risotto",
-        desc_es: "Champiñones silvestres, parmesano añejo y aceite de trufa",
-        desc_en: "Wild mushrooms, aged parmesan, truffle oil",
-        price: 76000,
-      },
-      {
-        name_es: "Salmón a la Plancha",
-        name_en: "Grilled Salmon",
-        desc_es: "Salmón noruego, quinoa tricolor y beurre blanc",
-        desc_en: "Norwegian salmon, tri-color quinoa, beurre blanc",
-        price: 89000,
-      },
-    ],
-  },
-  {
     id: "postres",
     es: "Postres",
     en: "Desserts",
@@ -472,9 +485,9 @@ export const menu: MenuCategory[] = [
     ],
   },
   {
-    id: "bar",
-    es: "Vinos & Destilados",
-    en: "Wine & Spirits",
+    id: "licores",
+    es: "Licores, Vinos y Destilados",
+    en: "Spirits, Wine & Liquor",
     items: [
       {
         name_es: "Copa de Vino Tinto Reserva",
@@ -484,26 +497,12 @@ export const menu: MenuCategory[] = [
         price: 38000,
       },
       {
-        name_es: "Whisky 18 Años",
-        name_en: "18-Year Whisky",
-        desc_es: "Servido solo, con hielo o en las rocas",
-        desc_en: "Served neat, on the rocks, or with a splash",
-        price: 65000,
-      },
-      {
         name_es: "Copa de Champagne",
         name_en: "Champagne Glass",
         desc_es: "Burbujas para celebrar cualquier ocasión",
         desc_en: "Bubbles to celebrate any occasion",
         price: 42000,
       },
-    ],
-  },
-  {
-    id: "licores",
-    es: "Carta de Licores",
-    en: "Spirits List",
-    items: [
       {
         name_es: "Whisky Etiqueta Negra",
         name_en: "Black Label Whisky",
