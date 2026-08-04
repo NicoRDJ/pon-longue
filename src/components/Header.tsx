@@ -1,9 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import MobileNav from "./MobileNav";
+
+// Hides the header when scrolling down (so it never sits over content the
+// visitor is trying to read), reveals it again on scroll up, and gives it
+// a solid, blurred background once the page has scrolled past the very
+// top — instead of staying fully transparent over whatever's behind it.
+function useHeaderScrollState() {
+  const [hidden, setHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    let raf = 0;
+
+    function update() {
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      if (y < 120) {
+        setHidden(false);
+      } else if (y > lastY.current + 4) {
+        setHidden(true);
+      } else if (y < lastY.current - 4) {
+        setHidden(false);
+      }
+      lastY.current = y;
+    }
+    function onScroll() {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(update);
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return { hidden, scrolled };
+}
 
 const navItems = [
   { key: "nav.about", href: "/#nosotros" },
@@ -20,10 +60,19 @@ export default function Header({
 }) {
   const { lang, setLang, t } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { hidden, scrolled } = useHeaderScrollState();
 
   return (
     <>
-      <header className="fixed inset-x-0 top-[38px] z-[100] px-6 py-5 transition-colors">
+      <header
+        className={`fixed inset-x-0 top-[38px] z-[100] px-6 py-5 transition-[transform,background-color,box-shadow,border-color] duration-300 ${
+          hidden ? "-translate-y-[calc(100%+38px)]" : "translate-y-0"
+        } ${
+          scrolled
+            ? "border-b border-white/10 bg-[rgba(11,13,16,0.85)] shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-md"
+            : "border-b border-transparent bg-transparent"
+        }`}
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-5">
           <Link
             href="/"
