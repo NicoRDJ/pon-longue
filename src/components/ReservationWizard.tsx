@@ -9,6 +9,7 @@ import {
   formatDate,
   formatTime,
 } from "@/lib/reservation";
+import { useCancelReservation } from "@/lib/useCancelReservation";
 import {
   PHONE_E164,
   PHONE_DISPLAY,
@@ -76,6 +77,88 @@ function Chip({
   );
 }
 
+function CancelBlock({ reservationId }: { reservationId: string }) {
+  const { t } = useLanguage();
+  const { state, setState, requestCancel } =
+    useCancelReservation(reservationId);
+
+  if (state === "cancelled") {
+    return (
+      <div className="mt-4 rounded-xl border border-[#8a5050]/40 bg-[#8a5050]/[0.08] p-4 text-center">
+        <p className="text-cream text-sm font-semibold">
+          {t("reserve.cancelledTitle")}
+        </p>
+        <p className="text-cream-muted mt-1 text-xs">
+          {t("reserve.cancelledBody")}
+        </p>
+      </div>
+    );
+  }
+
+  if (
+    state === "tooLate" ||
+    state === "alreadyCancelled" ||
+    state === "error"
+  ) {
+    const message =
+      state === "tooLate"
+        ? t("reserve.cancelErrorTooLate")
+        : t("reserve.cancelErrorGeneric");
+    return (
+      <p className="text-cream-muted mt-3.5 text-center text-xs italic">
+        {message}
+      </p>
+    );
+  }
+
+  if (state === "cancelling") {
+    return (
+      <p className="text-cream-muted mt-3.5 text-center text-xs italic">
+        {t("reserve.cancelling")}
+      </p>
+    );
+  }
+
+  if (state === "confirming") {
+    return (
+      <div className="mt-3.5 text-center">
+        <p className="text-cream-muted text-xs">
+          {t("reserve.cancelConfirmQuestion")}
+        </p>
+        <div className="mt-2 flex justify-center gap-4">
+          <button
+            type="button"
+            onClick={requestCancel}
+            className="text-xs font-semibold text-[#e08a8a] underline"
+          >
+            {t("reserve.cancelConfirmYes")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setState("idle")}
+            className="text-cream-muted text-xs underline"
+          >
+            {t("reserve.cancelConfirmNo")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3.5 text-center">
+      <p className="text-cream-muted text-xs">{t("reserve.cancelPrompt")}</p>
+      <button
+        type="button"
+        onClick={() => setState("confirming")}
+        className="text-brass-light mt-1 text-xs font-semibold underline"
+      >
+        {t("reserve.cancelLink")}
+      </button>
+    </div>
+  );
+}
+
 export default function ReservationWizard() {
   const { lang, t } = useLanguage();
 
@@ -94,6 +177,7 @@ export default function ReservationWizard() {
   const [slotsFailed, setSlotsFailed] = useState(false);
 
   const [bookingState, setBookingState] = useState<BookingState>("idle");
+  const [reservationId, setReservationId] = useState<string | null>(null);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -241,6 +325,10 @@ export default function ReservationWizard() {
       });
 
       if (res.status === 201) {
+        const body = (await res.json().catch(() => null)) as {
+          id?: string;
+        } | null;
+        setReservationId(body?.id ?? null);
         setBookingState("confirmed");
         return;
       }
@@ -640,6 +728,9 @@ export default function ReservationWizard() {
                       >
                         {t("reserve.addToCalendar")}
                       </button>
+                    )}
+                    {reservationId && (
+                      <CancelBlock reservationId={reservationId} />
                     )}
                   </div>
                 ) : (
