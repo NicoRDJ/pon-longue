@@ -16,6 +16,17 @@ export const dictionaries = {
     "nav.reservations": "Reservas",
     "nav.reserveCta": "Reservar",
 
+    "cancelLookup.eyebrow": "Reservas",
+    "cancelLookup.title": "Cancelar una reserva",
+    "cancelLookup.lead":
+      "Pega el código de tu reserva para encontrarla y cancelarla.",
+    "cancelLookup.inputLabel": "Código de reserva",
+    "cancelLookup.inputPlaceholder": "Ej. 3f2a1b9c-4d5e-...",
+    "cancelLookup.errorEmpty": "Ingresa el código de tu reserva.",
+    "cancelLookup.submitButton": "Buscar reserva",
+    "cancelLookup.hint":
+      "El código está al final del enlace que te enviamos por correo al confirmar tu reserva. ¿No lo encuentras? Escríbenos por WhatsApp.",
+
     "hero.eyebrow": "VIP Lounge · Medellín",
     "hero.title": "Donde el tiempo se detiene",
     "hero.titleEm": "y el lujo no tiene hora.",
@@ -158,6 +169,8 @@ export const dictionaries = {
       "Ya no es posible cancelar en línea (faltan menos de 2 horas). Escríbenos por WhatsApp o llámanos.",
     "reserve.cancelErrorGeneric":
       "No pudimos cancelar tu reserva. Intenta de nuevo o escríbenos por WhatsApp.",
+    "reserve.manageExisting": "¿Ya tienes una reserva y necesitas cancelarla?",
+    "reserve.manageExistingLink": "Cancélala aquí",
 
     "cancelPage.eyebrow": "Reservas",
     "cancelPage.title": "Cancelar reserva",
@@ -234,6 +247,17 @@ export const dictionaries = {
     "nav.location": "Location",
     "nav.reservations": "Reservations",
     "nav.reserveCta": "Reserve",
+
+    "cancelLookup.eyebrow": "Reservations",
+    "cancelLookup.title": "Cancel a reservation",
+    "cancelLookup.lead":
+      "Paste your reservation code to find it and cancel it.",
+    "cancelLookup.inputLabel": "Reservation code",
+    "cancelLookup.inputPlaceholder": "e.g. 3f2a1b9c-4d5e-...",
+    "cancelLookup.errorEmpty": "Enter your reservation code.",
+    "cancelLookup.submitButton": "Find reservation",
+    "cancelLookup.hint":
+      "The code is at the end of the link we emailed you when you confirmed your reservation. Can't find it? Message us on WhatsApp.",
 
     "hero.eyebrow": "VIP Lounge · Medellín",
     "hero.title": "Where time stops",
@@ -376,6 +400,8 @@ export const dictionaries = {
       "Online cancellation is no longer available (less than 2 hours left). Message us on WhatsApp or give us a call.",
     "reserve.cancelErrorGeneric":
       "We couldn't cancel your reservation. Try again or message us on WhatsApp.",
+    "reserve.manageExisting": "Already have a reservation you need to cancel?",
+    "reserve.manageExistingLink": "Cancel it here",
 
     "cancelPage.eyebrow": "Reservations",
     "cancelPage.title": "Cancel reservation",

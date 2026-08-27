@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 import {
@@ -883,6 +884,13 @@ export default function ReservationWizard() {
           {t("reserve.p1")} <span aria-hidden="true"> · </span>
           {t("reserve.p2")} <span aria-hidden="true"> · </span>
           {t("reserve.p3")}
+        </p>
+
+        <p className="text-cream-muted mx-auto mt-4 text-center text-[13px]">
+          {t("reserve.manageExisting")}{" "}
+          <Link href="/cancelar" className="text-brass-light underline">
+            {t("reserve.manageExistingLink")}
+          </Link>
         </p>
       </div>
     </section>
