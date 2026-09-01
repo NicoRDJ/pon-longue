@@ -53,9 +53,11 @@ function MenuItemCard({
       <div className="font-display text-cream text-lg">
         {item[`name_${lang}`]}
       </div>
-      <p className="text-cream-muted text-[13px] leading-relaxed">
-        {item[`desc_${lang}`]}
-      </p>
+      {item[`desc_${lang}`] && (
+        <p className="text-cream-muted text-[13px] leading-relaxed">
+          {item[`desc_${lang}`]}
+        </p>
+      )}
       {item.price != null && (
         <span className="border-brass/35 text-brass-light font-display self-start rounded-full border px-3 py-1 text-[17px]">
           {formatCOP(item.price)}

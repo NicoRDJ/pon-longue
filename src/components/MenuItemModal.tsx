@@ -6,7 +6,7 @@ import { formatCOP } from "@/lib/currency";
 
 export interface MenuItemDetail {
   name: string;
-  desc: string;
+  desc?: string;
   price?: number;
   image?: string;
 }
@@ -94,9 +94,11 @@ export default function MenuItemModal({
           >
             {item.name}
           </h3>
-          <p className="text-cream-muted mt-3 text-[15px] leading-relaxed">
-            {item.desc}
-          </p>
+          {item.desc && (
+            <p className="text-cream-muted mt-3 text-[15px] leading-relaxed">
+              {item.desc}
+            </p>
+          )}
           {item.price != null && (
             <span className="border-brass/35 text-brass-light font-display mt-5 inline-block rounded-full border px-4 py-1.5 text-lg">
               {formatCOP(item.price)}
