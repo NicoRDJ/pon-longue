@@ -37,7 +37,7 @@ test.describe("Home page", () => {
       if (msg.type() === "error") errors.push(msg.text());
     });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     expect(errors).toEqual([]);
   });
 
