@@ -65,10 +65,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (email) {
+  if (email && result.id) {
     try {
       await sendReservationConfirmation({
         to: email,
+        id: result.id,
         name,
         partySize,
         date,

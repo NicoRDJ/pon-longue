@@ -20,6 +20,7 @@ function getResendClient(): Resend {
 
 export async function sendReservationConfirmation({
   to,
+  id,
   name,
   partySize,
   date,
@@ -27,6 +28,7 @@ export async function sendReservationConfirmation({
   lang,
 }: {
   to: string;
+  id: string;
   name: string;
   partySize: number;
   date: string;
@@ -40,7 +42,14 @@ export async function sendReservationConfirmation({
       ? `Reserva confirmada — PON Lounge, ${formatDate(date, lang)}`
       : `Reservation confirmed — PON Lounge, ${formatDate(date, lang)}`;
 
-  const html = renderConfirmationHtml({ name, partySize, date, time, lang });
+  const html = renderConfirmationHtml({
+    id,
+    name,
+    partySize,
+    date,
+    time,
+    lang,
+  });
 
   const { error } = await resend.emails.send({
     from: FROM_ADDRESS,
@@ -55,12 +64,14 @@ export async function sendReservationConfirmation({
 }
 
 function renderConfirmationHtml({
+  id,
   name,
   partySize,
   date,
   time,
   lang,
 }: {
+  id: string;
   name: string;
   partySize: number;
   date: string;
@@ -76,8 +87,9 @@ function renderConfirmationHtml({
           people: "Personas",
           date: "Fecha",
           time: "Hora",
+          cancelButton: "Cancelar mi reserva",
           footer:
-            "Si necesitas cambiar o cancelar tu reserva, responde a este correo o escríbenos por WhatsApp.",
+            "¿Necesitas cambiar algo o cancelar? Usa el botón de arriba, escríbenos por WhatsApp, o responde a este correo.",
         }
       : {
           heading: "Your reservation is confirmed",
@@ -86,9 +98,13 @@ function renderConfirmationHtml({
           people: "Guests",
           date: "Date",
           time: "Time",
+          cancelButton: "Cancel my reservation",
           footer:
-            "Need to change or cancel? Just reply to this email or message us on WhatsApp.",
+            "Need to change something or cancel? Use the button above, message us on WhatsApp, or just reply to this email.",
         };
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3100";
+  const cancelUrl = `${siteUrl}/cancelar/${id}`;
 
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0d10;padding:32px;color:#f2ece0;">
@@ -111,7 +127,8 @@ function renderConfirmationHtml({
           <td style="padding:8px 0;text-align:right;font-weight:bold;">${formatTime(time)}</td>
         </tr>
       </table>
-      <p style="margin:24px 0 0;font-size:13px;color:#c9c0ae;">${t.footer}</p>
+      <a href="${cancelUrl}" style="display:block;text-align:center;margin:24px 0 0;padding:12px 20px;border-radius:999px;border:1px dashed rgba(185,141,75,0.55);color:#d9b578;text-decoration:none;font-size:13px;font-weight:bold;">${t.cancelButton}</a>
+      <p style="margin:16px 0 0;font-size:13px;color:#c9c0ae;">${t.footer}</p>
     </div>
   </div>`;
 }

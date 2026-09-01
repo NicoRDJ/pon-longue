@@ -16,6 +16,17 @@ export const dictionaries = {
     "nav.reservations": "Reservas",
     "nav.reserveCta": "Reservar",
 
+    "cancelLookup.eyebrow": "Reservas",
+    "cancelLookup.title": "Cancelar una reserva",
+    "cancelLookup.lead":
+      "Pega el código de tu reserva para encontrarla y cancelarla.",
+    "cancelLookup.inputLabel": "Código de reserva",
+    "cancelLookup.inputPlaceholder": "Ej. 3f2a1b9c-4d5e-...",
+    "cancelLookup.errorEmpty": "Ingresa el código de tu reserva.",
+    "cancelLookup.submitButton": "Buscar reserva",
+    "cancelLookup.hint":
+      "El código está al final del enlace que te enviamos por correo al confirmar tu reserva. ¿No lo encuentras? Escríbenos por WhatsApp.",
+
     "hero.eyebrow": "VIP Lounge · Medellín",
     "hero.title": "Donde el tiempo se detiene",
     "hero.titleEm": "y el lujo no tiene hora.",
@@ -146,6 +157,47 @@ export const dictionaries = {
       "No pudimos confirmar automáticamente. Intenta de nuevo o contáctanos directamente abajo.",
     "reserve.chooseAnotherTime": "Elegir otra hora",
     "reserve.orContactDirect": "— o contáctanos directamente —",
+    "reserve.cancelPrompt": "¿Necesitas cancelar esta reserva?",
+    "reserve.cancelLink": "Cancelar reserva",
+    "reserve.cancelConfirmQuestion": "¿Seguro que quieres cancelarla?",
+    "reserve.cancelConfirmYes": "Sí, cancelar",
+    "reserve.cancelConfirmNo": "No, mantenerla",
+    "reserve.cancelling": "Cancelando…",
+    "reserve.cancelledTitle": "Reserva cancelada",
+    "reserve.cancelledBody": "Tu mesa fue liberada. ¡Esperamos verte pronto!",
+    "reserve.cancelErrorTooLate":
+      "Ya no es posible cancelar en línea (faltan menos de 2 horas). Escríbenos por WhatsApp o llámanos.",
+    "reserve.cancelErrorGeneric":
+      "No pudimos cancelar tu reserva. Intenta de nuevo o escríbenos por WhatsApp.",
+    "reserve.manageExisting": "¿Ya tienes una reserva y necesitas cancelarla?",
+    "reserve.manageExistingLink": "Cancélala aquí",
+
+    "cancelPage.eyebrow": "Reservas",
+    "cancelPage.title": "Cancelar reserva",
+    "cancelPage.lead": "Revisa los datos antes de confirmar.",
+    "cancelPage.name": "Nombre",
+    "cancelPage.people": "Personas",
+    "cancelPage.date": "Fecha",
+    "cancelPage.time": "Hora",
+    "cancelPage.confirmButton": "Confirmar cancelación",
+    "cancelPage.keepButton": "No, quiero mantenerla",
+    "cancelPage.cancelling": "Cancelando…",
+    "cancelPage.notFoundTitle": "No encontramos esta reserva",
+    "cancelPage.notFoundBody":
+      "El enlace puede estar incompleto o la reserva ya no existe. Escríbenos por WhatsApp si necesitas ayuda.",
+    "cancelPage.alreadyCancelledTitle": "Esta reserva ya fue cancelada",
+    "cancelPage.alreadyCancelledBody": "No es necesario hacer nada más.",
+    "cancelPage.tooLateTitle": "Ya no se puede cancelar en línea",
+    "cancelPage.tooLateBody":
+      "Faltan menos de 2 horas para tu reserva. Escríbenos por WhatsApp o llámanos y con gusto te ayudamos.",
+    "cancelPage.successTitle": "Reserva cancelada",
+    "cancelPage.successBody":
+      "Tu mesa fue liberada. ¡Esperamos verte pronto en PON Lounge!",
+    "cancelPage.errorTitle": "Algo salió mal",
+    "cancelPage.errorBody":
+      "No pudimos procesar la cancelación. Intenta de nuevo o escríbenos por WhatsApp.",
+    "cancelPage.backHome": "Volver al inicio",
+    "cancelPage.whatsappCta": "Escribir por WhatsApp",
 
     "wizard.step1": "Ocasión",
     "wizard.step2": "Fecha y hora",
@@ -195,6 +247,17 @@ export const dictionaries = {
     "nav.location": "Location",
     "nav.reservations": "Reservations",
     "nav.reserveCta": "Reserve",
+
+    "cancelLookup.eyebrow": "Reservations",
+    "cancelLookup.title": "Cancel a reservation",
+    "cancelLookup.lead":
+      "Paste your reservation code to find it and cancel it.",
+    "cancelLookup.inputLabel": "Reservation code",
+    "cancelLookup.inputPlaceholder": "e.g. 3f2a1b9c-4d5e-...",
+    "cancelLookup.errorEmpty": "Enter your reservation code.",
+    "cancelLookup.submitButton": "Find reservation",
+    "cancelLookup.hint":
+      "The code is at the end of the link we emailed you when you confirmed your reservation. Can't find it? Message us on WhatsApp.",
 
     "hero.eyebrow": "VIP Lounge · Medellín",
     "hero.title": "Where time stops",
@@ -324,6 +387,49 @@ export const dictionaries = {
       "We couldn't confirm automatically. Try again or reach us directly below.",
     "reserve.chooseAnotherTime": "Choose another time",
     "reserve.orContactDirect": "— or reach us directly —",
+    "reserve.cancelPrompt": "Need to cancel this reservation?",
+    "reserve.cancelLink": "Cancel reservation",
+    "reserve.cancelConfirmQuestion": "Are you sure you want to cancel it?",
+    "reserve.cancelConfirmYes": "Yes, cancel it",
+    "reserve.cancelConfirmNo": "No, keep it",
+    "reserve.cancelling": "Cancelling…",
+    "reserve.cancelledTitle": "Reservation cancelled",
+    "reserve.cancelledBody":
+      "Your table has been released. Hope to see you soon!",
+    "reserve.cancelErrorTooLate":
+      "Online cancellation is no longer available (less than 2 hours left). Message us on WhatsApp or give us a call.",
+    "reserve.cancelErrorGeneric":
+      "We couldn't cancel your reservation. Try again or message us on WhatsApp.",
+    "reserve.manageExisting": "Already have a reservation you need to cancel?",
+    "reserve.manageExistingLink": "Cancel it here",
+
+    "cancelPage.eyebrow": "Reservations",
+    "cancelPage.title": "Cancel reservation",
+    "cancelPage.lead": "Review the details before confirming.",
+    "cancelPage.name": "Name",
+    "cancelPage.people": "Guests",
+    "cancelPage.date": "Date",
+    "cancelPage.time": "Time",
+    "cancelPage.confirmButton": "Confirm cancellation",
+    "cancelPage.keepButton": "No, keep it",
+    "cancelPage.cancelling": "Cancelling…",
+    "cancelPage.notFoundTitle": "We couldn't find this reservation",
+    "cancelPage.notFoundBody":
+      "The link may be incomplete, or the reservation no longer exists. Message us on WhatsApp if you need help.",
+    "cancelPage.alreadyCancelledTitle":
+      "This reservation was already cancelled",
+    "cancelPage.alreadyCancelledBody": "There's nothing else you need to do.",
+    "cancelPage.tooLateTitle": "Online cancellation is no longer available",
+    "cancelPage.tooLateBody":
+      "Less than 2 hours remain before your reservation. Message us on WhatsApp or give us a call and we'll help you out.",
+    "cancelPage.successTitle": "Reservation cancelled",
+    "cancelPage.successBody":
+      "Your table has been released. Hope to see you soon at PON Lounge!",
+    "cancelPage.errorTitle": "Something went wrong",
+    "cancelPage.errorBody":
+      "We couldn't process the cancellation. Try again or message us on WhatsApp.",
+    "cancelPage.backHome": "Back to home",
+    "cancelPage.whatsappCta": "Message us on WhatsApp",
 
     "wizard.step1": "Occasion",
     "wizard.step2": "Date & time",

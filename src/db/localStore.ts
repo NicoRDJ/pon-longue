@@ -12,6 +12,7 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { DEFAULT_SLOTS } from "@/lib/hours";
+import { isPastCancellationCutoff } from "@/lib/reservation";
 
 type ReservationStatus = "confirmed" | "cancelled";
 
@@ -40,6 +41,21 @@ export type BookResult = {
   id: string | null;
   status: "confirmed" | "full" | "unknown_slot" | "invalid_party_size";
   remaining: number | null;
+};
+
+export type ReservationSummary = {
+  id: string;
+  name: string;
+  partySize: number;
+  date: string;
+  time: string;
+  status: ReservationStatus;
+};
+
+export type CancelResult = {
+  status: "cancelled" | "not_found" | "already_cancelled" | "too_late";
+  date?: string;
+  time?: string;
 };
 
 const DATA_FILE = path.join(process.cwd(), ".data", "local-reservations.json");
@@ -186,6 +202,54 @@ export async function bookLocalReservation(input: {
       id: reservation.id,
       status: "confirmed",
       remaining: Math.max(slot.capacity - booked - input.partySize, 0),
+    };
+  });
+}
+
+export async function getLocalReservationById(
+  id: string,
+): Promise<ReservationSummary | null> {
+  const data = load();
+  const r = data.reservations.find((res) => res.id === id);
+  if (!r) return null;
+  return {
+    id: r.id,
+    name: r.name,
+    partySize: r.partySize,
+    date: r.reservationDate,
+    time: r.reservationTime,
+    status: r.status,
+  };
+}
+
+export async function cancelLocalReservation(
+  id: string,
+): Promise<CancelResult> {
+  return withSlotLock(`cancel|${id}`, () => {
+    const data = load();
+    const r = data.reservations.find((res) => res.id === id);
+    if (!r) return { status: "not_found" };
+    if (r.status === "cancelled") {
+      return {
+        status: "already_cancelled",
+        date: r.reservationDate,
+        time: r.reservationTime,
+      };
+    }
+    if (isPastCancellationCutoff(r.reservationDate, r.reservationTime)) {
+      return {
+        status: "too_late",
+        date: r.reservationDate,
+        time: r.reservationTime,
+      };
+    }
+
+    r.status = "cancelled";
+    persist();
+    return {
+      status: "cancelled",
+      date: r.reservationDate,
+      time: r.reservationTime,
     };
   });
 }

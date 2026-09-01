@@ -91,6 +91,40 @@ test.describe("Reservation wizard — live availability (mocked API)", () => {
     ).toBeVisible();
   });
 
+  test("lets the customer cancel right after confirming, with a confirm step", async ({
+    page,
+  }) => {
+    await mockAvailability(page);
+    await mockReservationOutcome(page, "confirmed");
+    await page.route("**/api/reservations/*/cancel", (route) =>
+      route.fulfill({
+        status: 200,
+        json: { status: "cancelled", date: "2026-09-01", time: "18:00" },
+      }),
+    );
+
+    await page.goto("/#reservas");
+    await page.locator("#reservas").scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rDate").fill("2026-09-01");
+    await page.locator('[role="radio"]:not([disabled])').first().click();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rName").fill("Ana Torres");
+    await page.getByRole("button", { name: "Siguiente" }).click();
+    await page.getByRole("button", { name: "Confirmar reserva" }).click();
+    await expect(page.getByText("¡Reserva confirmada!")).toBeVisible();
+
+    await page.getByRole("button", { name: "Cancelar reserva" }).click();
+    await expect(
+      page.getByText("¿Seguro que quieres cancelarla?"),
+    ).toBeVisible();
+
+    await page.getByRole("button", { name: "Sí, cancelar" }).click();
+    await expect(page.getByText("Reserva cancelada")).toBeVisible();
+  });
+
   test("shows a clear message and lets the user pick another time when a slot fills up mid-booking", async ({
     page,
   }) => {

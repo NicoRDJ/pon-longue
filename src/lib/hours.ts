@@ -14,6 +14,12 @@ export const LAST_RESERVATION_TIME = "21:00";
 // 120 total). Applies per time slot, not across the whole night.
 export const DEFAULT_SLOT_CAPACITY = 30;
 
+// Self-service cancellation cutoff — matches the "cancelaciones flexibles
+// hasta 2 horas antes" promise shown next to the reservation wizard. Closer
+// to the reservation than this, self-cancel is blocked and the customer is
+// pointed to WhatsApp/phone so staff can handle it directly.
+export const CANCELLATION_CUTOFF_HOURS = 2;
+
 function toMinutes(time: string): number {
   const [h = 0, m = 0] = time.split(":").map(Number);
   return h * 60 + m;

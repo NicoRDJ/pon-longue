@@ -1,4 +1,24 @@
 import type { Lang } from "./i18n/dictionaries";
+import { CANCELLATION_CUTOFF_HOURS } from "./hours";
+
+function toLocalDate(date: string, time: string): Date {
+  const [y = 0, m = 1, d = 1] = date.split("-").map(Number);
+  const [h = 0, min = 0] = time.split(":").map(Number);
+  return new Date(y, m - 1, d, h, min);
+}
+
+// True once we're within CANCELLATION_CUTOFF_HOURS of the reservation (or
+// past it) — self-service cancellation is blocked at that point, matching
+// the "cancelaciones flexibles hasta 2 horas antes" promise shown on the
+// page. `now` is injectable for tests.
+export function isPastCancellationCutoff(
+  date: string,
+  time: string,
+  now: Date = new Date(),
+): boolean {
+  const cutoffMs = CANCELLATION_CUTOFF_HOURS * 60 * 60 * 1000;
+  return now.getTime() >= toLocalDate(date, time).getTime() - cutoffMs;
+}
 
 export function formatDate(value: string, lang: Lang): string {
   if (!value) return "";
