@@ -18,16 +18,16 @@ export type CancelPageStatus =
   "not_found" | "already_cancelled" | "too_late" | "confirmed";
 
 export default function CancelReservationPanel({
-  id,
+  code,
   status,
   reservation,
 }: {
-  id: string;
+  code: string;
   status: CancelPageStatus;
   reservation: ReservationInfo | null;
 }) {
   const { lang, t } = useLanguage();
-  const { state, requestCancel } = useCancelReservation(id);
+  const { state, requestCancel } = useCancelReservation(code, lang);
 
   const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}`;
 

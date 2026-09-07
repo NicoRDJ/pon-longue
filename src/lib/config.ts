@@ -13,6 +13,9 @@ export const PHONE_DISPLAY =
 export const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_RESERVATIONS_EMAIL ?? "hola@ponlounge.co";
 
+export const STAFF_NOTIFICATION_EMAIL =
+  process.env.STAFF_NOTIFICATION_EMAIL || null;
+
 export const ADDRESS_LINE =
   process.env.NEXT_PUBLIC_ADDRESS ??
   "Cra 44 #20-28, Distrito Vera, El Poblado, Medellín, Colombia";

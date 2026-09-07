@@ -15,14 +15,15 @@ create or replace function book_reservation(
   p_time time,
   p_occasion text,
   p_notes text
-) returns table (id uuid, status text, remaining int) as $$
+) returns table (id uuid, code text, status text, remaining int) as $$
 declare
   v_capacity int;
   v_booked int;
   v_new_id uuid;
+  v_code text;
 begin
   if p_party_size is null or p_party_size < 1 then
-    return query select null::uuid, 'invalid_party_size'::text, null::int;
+    return query select null::uuid, null::text, 'invalid_party_size'::text, null::int;
     return;
   end if;
 
@@ -33,7 +34,7 @@ begin
   where slot_time = p_time;
 
   if v_capacity is null then
-    return query select null::uuid, 'unknown_slot'::text, null::int;
+    return query select null::uuid, null::text, 'unknown_slot'::text, null::int;
     return;
   end if;
 
@@ -44,17 +45,24 @@ begin
     and status = 'confirmed';
 
   if v_booked + p_party_size > v_capacity then
-    return query select null::uuid, 'full'::text, greatest(v_capacity - v_booked, 0);
+    return query select null::uuid, null::text, 'full'::text, greatest(v_capacity - v_booked, 0);
     return;
   end if;
 
+  -- Generate a short, human-typeable code like "PON-A3F9K2" and make sure
+  -- it doesn't collide with an existing one.
+  loop
+    v_code := 'PON-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    exit when not exists(select 1 from reservations where confirmation_code = v_code);
+  end loop;
+
   insert into reservations
-    (name, email, phone, party_size, reservation_date, reservation_time, occasion, notes, status)
+    (confirmation_code, name, email, phone, party_size, reservation_date, reservation_time, occasion, notes, status)
   values
-    (p_name, p_email, p_phone, p_party_size, p_date, p_time, p_occasion, p_notes, 'confirmed')
+    (v_code, p_name, p_email, p_phone, p_party_size, p_date, p_time, p_occasion, p_notes, 'confirmed')
   returning reservations.id into v_new_id;
 
   return query
-    select v_new_id, 'confirmed'::text, greatest(v_capacity - v_booked - p_party_size, 0);
+    select v_new_id, v_code, 'confirmed'::text, greatest(v_capacity - v_booked - p_party_size, 0);
 end;
 $$ language plpgsql;

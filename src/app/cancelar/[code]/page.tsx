@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { z } from "zod";
 import Header from "@/components/Header";
 import CartaFooter from "@/components/CartaFooter";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
@@ -7,10 +6,14 @@ import SkipLink from "@/components/SkipLink";
 import CancelReservationPanel, {
   type CancelPageStatus,
 } from "@/components/CancelReservationPanel";
-import { getReservationById } from "@/db/reservationsStore";
+import { getReservationByCode } from "@/db/reservationsStore";
 import { isPastCancellationCutoff } from "@/lib/reservation";
 
 export const dynamic = "force-dynamic";
+
+// PON-XXXXXX — 6 chars from an alphabet that skips 0/O/1/I to avoid
+// confusion when read aloud or typed by hand.
+const CODE_PATTERN = /^PON-[A-Z0-9]{6}$/i;
 
 export const metadata: Metadata = {
   title: "Cancelar reserva",
@@ -21,13 +24,14 @@ export const metadata: Metadata = {
 export default async function CancelReservationPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ code: string }>;
 }) {
-  const { id } = await params;
-  const parsedId = z.string().uuid().safeParse(id);
+  const { code } = await params;
+  const normalizedCode = decodeURIComponent(code).trim().toUpperCase();
+  const isValidFormat = CODE_PATTERN.test(normalizedCode);
 
-  const reservation = parsedId.success
-    ? await getReservationById(parsedId.data)
+  const reservation = isValidFormat
+    ? await getReservationByCode(normalizedCode)
     : null;
 
   let status: CancelPageStatus;
@@ -48,7 +52,7 @@ export default async function CancelReservationPage({
       <main id="main-content" className="flex-1">
         <section className="relative overflow-hidden px-6 pt-40 pb-24">
           <CancelReservationPanel
-            id={parsedId.success ? parsedId.data : id}
+            code={normalizedCode}
             status={status}
             reservation={
               reservation

@@ -78,10 +78,12 @@ function Chip({
   );
 }
 
-function CancelBlock({ reservationId }: { reservationId: string }) {
-  const { t } = useLanguage();
-  const { state, setState, requestCancel } =
-    useCancelReservation(reservationId);
+function CancelBlock({ reservationCode }: { reservationCode: string }) {
+  const { t, lang } = useLanguage();
+  const { state, setState, requestCancel } = useCancelReservation(
+    reservationCode,
+    lang,
+  );
 
   if (state === "cancelled") {
     return (
@@ -178,7 +180,7 @@ export default function ReservationWizard() {
   const [slotsFailed, setSlotsFailed] = useState(false);
 
   const [bookingState, setBookingState] = useState<BookingState>("idle");
-  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [reservationCode, setReservationCode] = useState<string | null>(null);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -328,8 +330,9 @@ export default function ReservationWizard() {
       if (res.status === 201) {
         const body = (await res.json().catch(() => null)) as {
           id?: string;
+          code?: string;
         } | null;
-        setReservationId(body?.id ?? null);
+        setReservationCode(body?.code ?? null);
         setBookingState("confirmed");
         return;
       }
@@ -721,6 +724,19 @@ export default function ReservationWizard() {
                     <p className="text-cream-muted mt-1.5 text-sm">
                       {t("reserve.confirmedBody")}
                     </p>
+                    {reservationCode && (
+                      <div className="border-brass/35 bg-brass/[0.08] mt-4 rounded-xl border border-dashed p-4">
+                        <p className="text-brass mb-1 text-[11px] font-bold tracking-[0.1em] uppercase">
+                          {t("reserve.codeLabel")}
+                        </p>
+                        <p className="font-display text-cream text-xl tracking-widest">
+                          {reservationCode}
+                        </p>
+                        <p className="text-cream-muted mt-1.5 text-[12px]">
+                          {t("reserve.codeNote")}
+                        </p>
+                      </div>
+                    )}
                     {date && time && (
                       <button
                         type="button"
@@ -730,8 +746,8 @@ export default function ReservationWizard() {
                         {t("reserve.addToCalendar")}
                       </button>
                     )}
-                    {reservationId && (
-                      <CancelBlock reservationId={reservationId} />
+                    {reservationCode && (
+                      <CancelBlock reservationCode={reservationCode} />
                     )}
                   </div>
                 ) : (

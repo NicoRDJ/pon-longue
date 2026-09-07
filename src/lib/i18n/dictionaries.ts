@@ -21,7 +21,7 @@ export const dictionaries = {
     "cancelLookup.lead":
       "Pega el código de tu reserva para encontrarla y cancelarla.",
     "cancelLookup.inputLabel": "Código de reserva",
-    "cancelLookup.inputPlaceholder": "Ej. 3f2a1b9c-4d5e-...",
+    "cancelLookup.inputPlaceholder": "Ej. PON-A3F9K2",
     "cancelLookup.errorEmpty": "Ingresa el código de tu reserva.",
     "cancelLookup.submitButton": "Buscar reserva",
     "cancelLookup.hint":
@@ -151,6 +151,9 @@ export const dictionaries = {
     "reserve.confirmedTitle": "¡Reserva confirmada!",
     "reserve.confirmedBody":
       "Te esperamos. Si nos diste tu correo, ya te enviamos los detalles.",
+    "reserve.codeLabel": "Código de reserva",
+    "reserve.codeNote":
+      "Guarda este código: lo necesitas para cancelar tu reserva si no puedes venir.",
     "reserve.errorFull":
       "Ese horario se acaba de llenar. Elige otra hora disponible.",
     "reserve.errorGeneric":
@@ -253,7 +256,7 @@ export const dictionaries = {
     "cancelLookup.lead":
       "Paste your reservation code to find it and cancel it.",
     "cancelLookup.inputLabel": "Reservation code",
-    "cancelLookup.inputPlaceholder": "e.g. 3f2a1b9c-4d5e-...",
+    "cancelLookup.inputPlaceholder": "e.g. PON-A3F9K2",
     "cancelLookup.errorEmpty": "Enter your reservation code.",
     "cancelLookup.submitButton": "Find reservation",
     "cancelLookup.hint":
@@ -381,6 +384,9 @@ export const dictionaries = {
     "reserve.confirmedTitle": "Reservation confirmed!",
     "reserve.confirmedBody":
       "We'll see you then. If you gave us your email, we've already sent the details.",
+    "reserve.codeLabel": "Confirmation code",
+    "reserve.codeNote":
+      "Keep this code: you'll need it to cancel your reservation if you can't make it.",
     "reserve.errorFull":
       "That time just filled up. Please choose another available slot.",
     "reserve.errorGeneric":

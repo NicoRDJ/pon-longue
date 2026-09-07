@@ -13,7 +13,7 @@ import { isPastCancellationCutoff } from "@/lib/reservation";
 import {
   getLocalAvailability,
   bookLocalReservation,
-  getLocalReservationById,
+  getLocalReservationByCode,
   cancelLocalReservation,
   type BookResult,
   type ReservationSummary,
@@ -91,29 +91,36 @@ export async function bookReservation(input: {
   `) as BookResult[];
 
   return (
-    rows[0] ?? { id: null, status: "unknown_slot" as const, remaining: null }
+    rows[0] ?? {
+      id: null,
+      code: null,
+      status: "unknown_slot" as const,
+      remaining: null,
+    }
   );
 }
 
-export async function getReservationById(
-  id: string,
+export async function getReservationByCode(
+  code: string,
 ): Promise<ReservationSummary | null> {
   if (!hasRemoteDatabase()) {
-    return getLocalReservationById(id);
+    return getLocalReservationByCode(code);
   }
 
   const db = getDb();
   const rows = await db
     .select()
     .from(reservations)
-    .where(eq(reservations.id, id))
+    .where(eq(reservations.confirmationCode, code.trim().toUpperCase()))
     .limit(1);
   const r = rows[0];
   if (!r) return null;
 
   return {
     id: r.id,
+    code: r.confirmationCode,
     name: r.name,
+    email: r.email,
     partySize: r.partySize,
     date: r.reservationDate,
     time: r.reservationTime.slice(0, 5),
@@ -121,28 +128,31 @@ export async function getReservationById(
   };
 }
 
-export async function cancelReservation(id: string): Promise<CancelResult> {
+export async function cancelReservation(code: string): Promise<CancelResult> {
   if (!hasRemoteDatabase()) {
-    return cancelLocalReservation(id);
+    return cancelLocalReservation(code);
   }
 
+  const normalizedCode = code.trim().toUpperCase();
   const db = getDb();
   const rows = await db
     .select()
     .from(reservations)
-    .where(eq(reservations.id, id))
+    .where(eq(reservations.confirmationCode, normalizedCode))
     .limit(1);
   const existing = rows[0];
   if (!existing) return { status: "not_found" };
 
   const date = existing.reservationDate;
   const time = existing.reservationTime.slice(0, 5);
+  const name = existing.name;
+  const email = existing.email;
 
   if (existing.status === "cancelled") {
-    return { status: "already_cancelled", date, time };
+    return { status: "already_cancelled", name, email, date, time };
   }
   if (isPastCancellationCutoff(date, time)) {
-    return { status: "too_late", date, time };
+    return { status: "too_late", name, email, date, time };
   }
 
   // Conditional on status='confirmed' so a concurrent cancel of the same
@@ -151,12 +161,17 @@ export async function cancelReservation(id: string): Promise<CancelResult> {
   const updated = await db
     .update(reservations)
     .set({ status: "cancelled" })
-    .where(and(eq(reservations.id, id), eq(reservations.status, "confirmed")))
+    .where(
+      and(
+        eq(reservations.confirmationCode, normalizedCode),
+        eq(reservations.status, "confirmed"),
+      ),
+    )
     .returning({ id: reservations.id });
 
   if (updated.length === 0) {
-    return { status: "already_cancelled", date, time };
+    return { status: "already_cancelled", name, email, date, time };
   }
 
-  return { status: "cancelled", date, time };
+  return { status: "cancelled", name, email, date, time };
 }

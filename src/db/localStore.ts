@@ -18,6 +18,7 @@ type ReservationStatus = "confirmed" | "cancelled";
 
 type LocalReservation = {
   id: string;
+  confirmationCode: string;
   name: string;
   email: string | null;
   phone: string | null;
@@ -39,13 +40,16 @@ type StoreData = {
 
 export type BookResult = {
   id: string | null;
+  code: string | null;
   status: "confirmed" | "full" | "unknown_slot" | "invalid_party_size";
   remaining: number | null;
 };
 
 export type ReservationSummary = {
   id: string;
+  code: string;
   name: string;
+  email: string | null;
   partySize: number;
   date: string;
   time: string;
@@ -54,39 +58,80 @@ export type ReservationSummary = {
 
 export type CancelResult = {
   status: "cancelled" | "not_found" | "already_cancelled" | "too_late";
+  name?: string;
+  email?: string | null;
   date?: string;
   time?: string;
 };
 
 const DATA_FILE = path.join(process.cwd(), ".data", "local-reservations.json");
 
-let cache: StoreData | null = null;
 let persistenceWarned = false;
 
 function defaultData(): StoreData {
   return { slots: DEFAULT_SLOTS.map((s) => ({ ...s })), reservations: [] };
 }
 
+// Generates a short, human-typeable confirmation code like "PON-A3F9K2".
+// This is the identifier customers actually use — typed into the
+// "cancelar" lookup form, or embedded in the emailed cancel link
+// (/cancelar/<code>) so clicking it goes straight there too.
+function generateCodeCandidate(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `PON-${code}`;
+}
+
+// Keeps generating candidates until one doesn't collide with an existing
+// reservation's code (checked against *all* reservations, including
+// cancelled ones, so a cancelled reservation's code can never be reissued
+// to someone else).
+function generateConfirmationCode(data: StoreData): string {
+  let code = generateCodeCandidate();
+  let attempts = 0;
+  while (
+    data.reservations.some(
+      (r) => r.confirmationCode.toUpperCase() === code.toUpperCase(),
+    )
+  ) {
+    code = generateCodeCandidate();
+    attempts += 1;
+    if (attempts > 20) {
+      throw new Error(
+        "Couldn't generate a unique confirmation code after 20 attempts",
+      );
+    }
+  }
+  return code;
+}
+
+// No in-memory cache between calls — always read the file fresh and
+// write it back immediately. At this venue's scale (a handful of
+// reservations at a time, not high-frequency traffic) the extra disk
+// read/write per request is free, and it rules out an entire class of
+// staleness bugs: two route handlers (or two module instances, which can
+// happen under dev hot-reload/Turbopack) ending up with different
+// snapshots in memory until the server restarts.
 function load(): StoreData {
-  if (cache) return cache;
   try {
     const raw = readFileSync(DATA_FILE, "utf-8");
     const parsed = JSON.parse(raw) as StoreData;
-    cache = {
+    return {
       slots: parsed.slots?.length ? parsed.slots : defaultData().slots,
       reservations: parsed.reservations ?? [],
     };
   } catch {
-    cache = defaultData();
+    return defaultData();
   }
-  return cache;
 }
 
-function persist() {
-  if (!cache) return;
+function persist(data: StoreData) {
   try {
     mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-    writeFileSync(DATA_FILE, JSON.stringify(cache, null, 2), "utf-8");
+    writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
     if (!persistenceWarned) {
       persistenceWarned = true;
@@ -155,14 +200,19 @@ export async function bookLocalReservation(input: {
   notes: string | null;
 }): Promise<BookResult> {
   if (!input.partySize || input.partySize < 1) {
-    return { id: null, status: "invalid_party_size", remaining: null };
+    return {
+      id: null,
+      code: null,
+      status: "invalid_party_size",
+      remaining: null,
+    };
   }
 
   return withSlotLock(`${input.date}|${input.time}`, () => {
     const data = load();
     const slot = data.slots.find((s) => s.slotTime === input.time);
     if (!slot) {
-      return { id: null, status: "unknown_slot", remaining: null };
+      return { id: null, code: null, status: "unknown_slot", remaining: null };
     }
 
     const booked = data.reservations
@@ -177,6 +227,7 @@ export async function bookLocalReservation(input: {
     if (booked + input.partySize > slot.capacity) {
       return {
         id: null,
+        code: null,
         status: "full",
         remaining: Math.max(slot.capacity - booked, 0),
       };
@@ -184,6 +235,7 @@ export async function bookLocalReservation(input: {
 
     const reservation: LocalReservation = {
       id: randomUUID(),
+      confirmationCode: generateConfirmationCode(data),
       name: input.name,
       email: input.email,
       phone: input.phone,
@@ -196,25 +248,31 @@ export async function bookLocalReservation(input: {
       createdAt: new Date().toISOString(),
     };
     data.reservations.push(reservation);
-    persist();
+    persist(data);
 
     return {
       id: reservation.id,
+      code: reservation.confirmationCode,
       status: "confirmed",
       remaining: Math.max(slot.capacity - booked - input.partySize, 0),
     };
   });
 }
 
-export async function getLocalReservationById(
-  id: string,
+export async function getLocalReservationByCode(
+  code: string,
 ): Promise<ReservationSummary | null> {
   const data = load();
-  const r = data.reservations.find((res) => res.id === id);
+  const normalized = code.trim().toUpperCase();
+  const r = data.reservations.find(
+    (res) => res.confirmationCode.toUpperCase() === normalized,
+  );
   if (!r) return null;
   return {
     id: r.id,
+    code: r.confirmationCode,
     name: r.name,
+    email: r.email,
     partySize: r.partySize,
     date: r.reservationDate,
     time: r.reservationTime,
@@ -223,15 +281,20 @@ export async function getLocalReservationById(
 }
 
 export async function cancelLocalReservation(
-  id: string,
+  code: string,
 ): Promise<CancelResult> {
-  return withSlotLock(`cancel|${id}`, () => {
+  const normalized = code.trim().toUpperCase();
+  return withSlotLock(`cancel|${normalized}`, () => {
     const data = load();
-    const r = data.reservations.find((res) => res.id === id);
+    const r = data.reservations.find(
+      (res) => res.confirmationCode.toUpperCase() === normalized,
+    );
     if (!r) return { status: "not_found" };
     if (r.status === "cancelled") {
       return {
         status: "already_cancelled",
+        name: r.name,
+        email: r.email,
         date: r.reservationDate,
         time: r.reservationTime,
       };
@@ -239,22 +302,27 @@ export async function cancelLocalReservation(
     if (isPastCancellationCutoff(r.reservationDate, r.reservationTime)) {
       return {
         status: "too_late",
+        name: r.name,
+        email: r.email,
         date: r.reservationDate,
         time: r.reservationTime,
       };
     }
 
     r.status = "cancelled";
-    persist();
+    persist(data);
     return {
       status: "cancelled",
+      name: r.name,
+      email: r.email,
       date: r.reservationDate,
       time: r.reservationTime,
     };
   });
 }
 
-// Test-only: reset the in-memory cache so each test starts clean.
-export function __resetLocalStoreForTests() {
-  cache = null;
-}
+// Test-only: kept as a no-op for compatibility with existing test files —
+// there's no in-memory cache to reset anymore since load() always reads
+// the file fresh. Deleting the file between tests (which the tests
+// already do) is what actually resets state now.
+export function __resetLocalStoreForTests() {}

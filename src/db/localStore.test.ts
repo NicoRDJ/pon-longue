@@ -5,7 +5,7 @@ import {
   getLocalAvailability,
   bookLocalReservation,
   cancelLocalReservation,
-  getLocalReservationById,
+  getLocalReservationByCode,
   __resetLocalStoreForTests,
 } from "./localStore";
 
@@ -47,10 +47,11 @@ describe("localStore", () => {
     expect(slots.every((s) => s.capacity === 30)).toBe(true);
   });
 
-  it("books a reservation and reflects it in availability", async () => {
+  it("books a reservation, returns a confirmation code, and reflects it in availability", async () => {
     const result = await bookLocalReservation(baseInput());
     expect(result.status).toBe("confirmed");
     expect(result.id).toBeTruthy();
+    expect(result.code).toMatch(/^PON-[A-Z0-9]{6}$/);
     expect(result.remaining).toBe(26);
 
     const slots = await getLocalAvailability("2099-01-01");
@@ -84,36 +85,70 @@ describe("localStore", () => {
     const result = await bookLocalReservation(baseInput({ partySize: 0 }));
     expect(result.status).toBe("invalid_party_size");
   });
+
+  it("never generates a duplicate confirmation code across many bookings", async () => {
+    const times = [
+      "16:00",
+      "16:30",
+      "17:00",
+      "17:30",
+      "18:00",
+      "18:30",
+      "19:00",
+      "19:30",
+      "20:00",
+      "20:30",
+      "21:00",
+    ];
+    const codes = new Set<string>();
+    for (const time of times) {
+      const result = await bookLocalReservation(
+        baseInput({ time, partySize: 1 }),
+      );
+      expect(result.status).toBe("confirmed");
+      expect(codes.has(result.code!)).toBe(false);
+      codes.add(result.code!);
+    }
+    expect(codes.size).toBe(times.length);
+  });
 });
 
 describe("cancelLocalReservation", () => {
-  it("cancels a confirmed reservation and frees its capacity", async () => {
-    const booked = await bookLocalReservation(baseInput());
-    const result = await cancelLocalReservation(booked.id!);
+  it("cancels a confirmed reservation (by code) and frees its capacity", async () => {
+    const booked = await bookLocalReservation(
+      baseInput({ email: "ana@example.com" }),
+    );
+    const result = await cancelLocalReservation(booked.code!);
     expect(result).toEqual({
       status: "cancelled",
+      name: "Ana Torres",
+      email: "ana@example.com",
       date: "2099-01-01",
       time: "16:00",
     });
 
-    const stored = await getLocalReservationById(booked.id!);
+    const stored = await getLocalReservationByCode(booked.code!);
     expect(stored?.status).toBe("cancelled");
 
     const slots = await getLocalAvailability("2099-01-01");
     expect(slots.find((s) => s.time === "16:00")?.booked).toBe(0);
   });
 
-  it("returns not_found for an unknown id", async () => {
-    const result = await cancelLocalReservation(
-      "00000000-0000-0000-0000-000000000000",
-    );
+  it("accepts a code regardless of upper/lowercase", async () => {
+    const booked = await bookLocalReservation(baseInput());
+    const result = await cancelLocalReservation(booked.code!.toLowerCase());
+    expect(result.status).toBe("cancelled");
+  });
+
+  it("returns not_found for an unknown code", async () => {
+    const result = await cancelLocalReservation("PON-ZZZZZZ");
     expect(result).toEqual({ status: "not_found" });
   });
 
   it("returns already_cancelled on a second cancellation", async () => {
     const booked = await bookLocalReservation(baseInput());
-    await cancelLocalReservation(booked.id!);
-    const second = await cancelLocalReservation(booked.id!);
+    await cancelLocalReservation(booked.code!);
+    const second = await cancelLocalReservation(booked.code!);
     expect(second.status).toBe("already_cancelled");
   });
 
@@ -123,14 +158,16 @@ describe("cancelLocalReservation", () => {
     const booked = await bookLocalReservation(baseInput());
 
     vi.setSystemTime(new Date(2099, 0, 1, 15, 0)); // 1h before the 16:00 slot
-    const result = await cancelLocalReservation(booked.id!);
+    const result = await cancelLocalReservation(booked.code!);
     expect(result).toEqual({
       status: "too_late",
+      name: "Ana Torres",
+      email: null,
       date: "2099-01-01",
       time: "16:00",
     });
 
-    const stored = await getLocalReservationById(booked.id!);
+    const stored = await getLocalReservationByCode(booked.code!);
     expect(stored?.status).toBe("confirmed");
 
     const slots = await getLocalAvailability("2099-01-01");
@@ -143,29 +180,35 @@ describe("cancelLocalReservation", () => {
     const booked = await bookLocalReservation(baseInput());
 
     vi.setSystemTime(new Date(2099, 0, 1, 13, 59));
-    const result = await cancelLocalReservation(booked.id!);
+    const result = await cancelLocalReservation(booked.code!);
     expect(result.status).toBe("cancelled");
   });
 });
 
-describe("getLocalReservationById", () => {
-  it("returns null for an unknown id", async () => {
-    const result = await getLocalReservationById(
-      "00000000-0000-0000-0000-000000000000",
-    );
+describe("getLocalReservationByCode", () => {
+  it("returns null for an unknown code", async () => {
+    const result = await getLocalReservationByCode("PON-ZZZZZZ");
     expect(result).toBeNull();
   });
 
-  it("returns the reservation summary for a known id", async () => {
+  it("returns the reservation summary for a known code", async () => {
     const booked = await bookLocalReservation(baseInput());
-    const result = await getLocalReservationById(booked.id!);
+    const result = await getLocalReservationByCode(booked.code!);
     expect(result).toEqual({
       id: booked.id,
+      code: booked.code,
       name: "Ana Torres",
+      email: null,
       partySize: 4,
       date: "2099-01-01",
       time: "16:00",
       status: "confirmed",
     });
+  });
+
+  it("is case-insensitive", async () => {
+    const booked = await bookLocalReservation(baseInput());
+    const result = await getLocalReservationByCode(booked.code!.toLowerCase());
+    expect(result?.code).toBe(booked.code);
   });
 });

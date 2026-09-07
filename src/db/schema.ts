@@ -21,6 +21,7 @@ export const slotCapacity = pgTable("slot_capacity", {
 
 export const reservations = pgTable("reservations", {
   id: uuid("id").defaultRandom().primaryKey(),
+  confirmationCode: text("confirmation_code").notNull().unique(),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),

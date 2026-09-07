@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { bookReservation, type BookResult } from "@/db/reservationsStore";
-import { sendReservationConfirmation } from "@/lib/email";
+import {
+  sendReservationConfirmation,
+  sendStaffReservationNotification,
+} from "@/lib/email";
+import { STAFF_NOTIFICATION_EMAIL } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -65,11 +69,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (email && result.id) {
+  if (email && result.code) {
     try {
       await sendReservationConfirmation({
         to: email,
-        id: result.id,
+        code: result.code,
         name,
         partySize,
         date,
@@ -84,8 +88,36 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Best-effort internal notification — inactive until
+  // STAFF_NOTIFICATION_EMAIL is set (left unset during dev/testing on
+  // purpose, see config.ts).
+  if (STAFF_NOTIFICATION_EMAIL && result.code) {
+    try {
+      await sendStaffReservationNotification({
+        staffEmail: STAFF_NOTIFICATION_EMAIL,
+        code: result.code,
+        name,
+        email: email || null,
+        phone: phone || null,
+        partySize,
+        date,
+        time,
+        occasion: occasion || null,
+        notes: notes || null,
+        source: "web",
+      });
+    } catch (err) {
+      console.error("Failed to send staff notification email:", err);
+    }
+  }
+
   return NextResponse.json(
-    { id: result.id, status: "confirmed", remaining: result.remaining },
+    {
+      id: result.id,
+      code: result.code,
+      status: "confirmed",
+      remaining: result.remaining,
+    },
     { status: 201 },
   );
 }
