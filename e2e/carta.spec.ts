@@ -27,7 +27,9 @@ test.describe("Carta page", () => {
       if (msg.type() === "error") errors.push(msg.text());
     });
     await page.goto("/carta");
-    await page.waitForLoadState("networkidle");
+    await expect(
+      page.locator("[aria-controls^='acc-panel-']").first(),
+    ).toBeVisible();
     expect(errors).toEqual([]);
   });
 

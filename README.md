@@ -142,10 +142,31 @@ of which backend is active.
   via Vercel's Postgres dashboard/Neon's SQL editor for a one-off change
   without redeploying.
 
+### Cancelling a reservation
+
+Self-service cancellation, no staff involvement needed, available two ways:
+
+1. **Right after booking** — the confirmed step of the wizard shows a
+   "Cancelar reserva" link (`CancelBlock` in `ReservationWizard.tsx`), using
+   the reservation `id` already in memory from the booking response.
+2. **From the confirmation email, any time later** — the email includes a
+   link to `/cancelar/[id]`, a standalone page that shows the reservation's
+   details and a confirm button. There's also `/cancelar` (no id), a small
+   lookup form (paste the code or the full email link) for anyone who
+   navigates there without a direct link — linked from the reservations
+   section on the homepage, not the main nav.
+
+Both paths call the same `POST /api/reservations/[id]/cancel`, which enforces
+one business rule server-side: cancellation is blocked within
+**`CANCELLATION_CUTOFF_HOURS`** (currently 2h, in `src/lib/hours.ts`) of the
+reservation time — matches the "cancelaciones flexibles hasta 2 horas antes"
+copy shown next to the wizard. Works against both backends (local-simulated
+and real Postgres) the same way availability/booking do.
+
 ### Files involved
 
 ```
-src/lib/hours.ts                # Single source of truth: hours, slots, capacity
+src/lib/hours.ts                # Single source of truth: hours, slots, capacity, cancellation cutoff
 src/db/reservationsStore.ts     # Picks local-simulated vs real Postgres automatically
 src/db/localStore.ts            # Local JSON-file-simulated DB (no setup required)
 src/db/schema.ts              # Drizzle schema: reservations, slot_capacity
@@ -154,8 +175,15 @@ src/db/sql/book_reservation.sql  # The atomic booking Postgres function
 src/db/seed.ts                  # Installs the function + seeds default slots (Postgres only)
 src/app/api/availability/route.ts   # GET real-time remaining capacity
 src/app/api/reservations/route.ts   # POST — books + triggers confirmation email
-src/lib/email.ts                # Resend confirmation email
-src/components/ReservationWizard.tsx  # Live mode + manual-fallback UI
+src/app/api/reservations/[id]/cancel/route.ts  # POST — cancels a reservation
+src/app/cancelar/page.tsx           # Lookup form (paste a reservation code)
+src/app/cancelar/[id]/page.tsx      # Cancellation confirmation page (from the email link)
+src/lib/email.ts                # Resend confirmation email (includes the cancel link)
+src/lib/reservation.ts          # Date/time formatting + cancellation-cutoff check
+src/components/ReservationWizard.tsx     # Live mode + manual-fallback UI + inline cancel
+src/components/CancelReservationPanel.tsx  # UI for the /cancelar/[id] page
+src/components/CancelLookupForm.tsx        # UI for the /cancelar lookup page
+src/lib/useCancelReservation.ts            # Shared cancel-request hook (used by both UIs)
 ```
 
 ## Scripts
