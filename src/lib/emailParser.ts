@@ -15,6 +15,8 @@ export type ParsedReservationRequest = {
   date: string;
   time: string;
   notes: string | null;
+  depositAmount: number | null;
+  depositReference: string | null;
 };
 
 // Same alphabet/shape as generated in localStore.ts: PON- followed by 6
@@ -36,6 +38,9 @@ const FIELD_PATTERNS = {
     date: /^[ \t]*fecha[ \t]*:[ \t]*(\d{4}-\d{2}-\d{2})/im,
     time: /^[ \t]*hora[ \t]*:[ \t]*(\d{1,2}:\d{2})/im,
     notes: /^[ \t]*notas[ \t]*:[ \t]*(.+)$/im,
+    depositAmount:
+      /^[ \t]*dep[oó]sito transferido[ \t]*:[ \t]*\$?[ \t]*([\d.,]+)/im,
+    depositReference: /^[ \t]*referencia[ \t]*:[ \t]*(\S+)/im,
   },
   en: {
     name: /^[ \t]*name[ \t]*:[ \t]*(.+)$/im,
@@ -43,6 +48,9 @@ const FIELD_PATTERNS = {
     date: /^[ \t]*date[ \t]*:[ \t]*(\d{4}-\d{2}-\d{2})/im,
     time: /^[ \t]*time[ \t]*:[ \t]*(\d{1,2}:\d{2})/im,
     notes: /^[ \t]*notes[ \t]*:[ \t]*(.+)$/im,
+    depositAmount:
+      /^[ \t]*deposit transferred[ \t]*:[ \t]*\$?[ \t]*([\d.,]+)/im,
+    depositReference: /^[ \t]*reference[ \t]*:[ \t]*(\S+)/im,
   },
 } as const;
 
@@ -88,6 +96,8 @@ export function parseReservationRequest(
     const date = dateMatch[1];
     const time = normalizeTime(timeMatch[1]);
     const notesMatch = text.match(patterns.notes);
+    const depositAmountMatch = text.match(patterns.depositAmount);
+    const depositReferenceMatch = text.match(patterns.depositReference);
 
     if (!name) continue;
     if (!Number.isInteger(partySize) || partySize < 1 || partySize > 30) {
@@ -96,6 +106,10 @@ export function parseReservationRequest(
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     if (!/^\d{2}:\d{2}$/.test(time)) continue;
 
+    const depositAmount = depositAmountMatch?.[1]
+      ? Number(depositAmountMatch[1].replace(/[.,]/g, ""))
+      : null;
+
     return {
       lang,
       name,
@@ -103,6 +117,11 @@ export function parseReservationRequest(
       date,
       time,
       notes: notesMatch?.[1] ? notesMatch[1].trim() : null,
+      depositAmount:
+        depositAmount != null && Number.isFinite(depositAmount)
+          ? depositAmount
+          : null,
+      depositReference: depositReferenceMatch?.[1]?.trim() ?? null,
     };
   }
 

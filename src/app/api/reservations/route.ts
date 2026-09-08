@@ -5,7 +5,7 @@ import {
   sendReservationConfirmation,
   sendStaffReservationNotification,
 } from "@/lib/email";
-import { STAFF_NOTIFICATION_EMAIL } from "@/lib/config";
+import { STAFF_NOTIFICATION_EMAIL, calculateDeposit } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +19,13 @@ const bodySchema = z.object({
   occasion: z.string().trim().max(60).optional(),
   notes: z.string().trim().max(1000).optional(),
   lang: z.enum(["es", "en"]).default("es"),
+  // Self-declared deposit: what the customer says they transferred, plus
+  // the reference code they were shown to put in the transfer's
+  // description. The *required* amount is always recomputed server-side
+  // from partySize — never trusted from the client — so it can't be
+  // tampered with by sending a lower number.
+  depositAmount: z.number().int().min(0),
+  depositReference: z.string().trim().max(60).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -37,8 +44,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { name, email, phone, partySize, date, time, occasion, notes, lang } =
-    parsed.data;
+  const {
+    name,
+    email,
+    phone,
+    partySize,
+    date,
+    time,
+    occasion,
+    notes,
+    lang,
+    depositAmount,
+    depositReference,
+  } = parsed.data;
+
+  const depositRequired = calculateDeposit(partySize);
+
+  if (depositAmount < depositRequired) {
+    return NextResponse.json(
+      { error: "deposit_too_low", depositRequired },
+      { status: 400 },
+    );
+  }
 
   let result: BookResult;
   try {
@@ -51,6 +78,9 @@ export async function POST(req: NextRequest) {
       time,
       occasion: occasion || null,
       notes: notes || null,
+      depositRequired,
+      depositAmount,
+      depositReference: depositReference || null,
     });
   } catch (err) {
     console.error("POST /api/reservations failed:", err);
@@ -62,9 +92,14 @@ export async function POST(req: NextRequest) {
 
   if (!result || result.status !== "confirmed") {
     const reason = result?.status ?? "unknown_error";
-    const statusCode = reason === "full" ? 409 : 400;
+    const statusCode =
+      reason === "full" ? 409 : reason === "deposit_too_low" ? 400 : 400;
     return NextResponse.json(
-      { error: reason, remaining: result?.remaining ?? 0 },
+      {
+        error: reason,
+        remaining: result?.remaining ?? 0,
+        depositRequired: result?.depositRequired ?? depositRequired,
+      },
       { status: statusCode },
     );
   }
@@ -90,7 +125,8 @@ export async function POST(req: NextRequest) {
 
   // Best-effort internal notification — inactive until
   // STAFF_NOTIFICATION_EMAIL is set (left unset during dev/testing on
-  // purpose, see config.ts).
+  // purpose, see config.ts). Includes the deposit reference so staff can
+  // find the matching transfer on the bank statement.
   if (STAFF_NOTIFICATION_EMAIL && result.code) {
     try {
       await sendStaffReservationNotification({
@@ -105,6 +141,9 @@ export async function POST(req: NextRequest) {
         occasion: occasion || null,
         notes: notes || null,
         source: "web",
+        depositRequired,
+        depositAmount,
+        depositReference: depositReference || null,
       });
     } catch (err) {
       console.error("Failed to send staff notification email:", err);
@@ -117,6 +156,7 @@ export async function POST(req: NextRequest) {
       code: result.code,
       status: "confirmed",
       remaining: result.remaining,
+      depositRequired,
     },
     { status: 201 },
   );

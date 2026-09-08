@@ -12,7 +12,11 @@ import {
   sendManualReviewAlert,
   sendStaffReservationNotification,
 } from "@/lib/email";
-import { CONTACT_EMAIL, STAFF_NOTIFICATION_EMAIL } from "@/lib/config";
+import {
+  CONTACT_EMAIL,
+  STAFF_NOTIFICATION_EMAIL,
+  calculateDeposit,
+} from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -112,6 +116,9 @@ export async function POST(req: NextRequest) {
   // por correo" mailto button.
   const parsed = parseReservationRequest(bodyText);
   if (parsed) {
+    const depositRequired = calculateDeposit(parsed.partySize);
+    const depositAmount = parsed.depositAmount ?? 0;
+
     let result;
     try {
       result = await bookReservation({
@@ -123,6 +130,9 @@ export async function POST(req: NextRequest) {
         time: parsed.time,
         occasion: null,
         notes: parsed.notes,
+        depositRequired,
+        depositAmount,
+        depositReference: parsed.depositReference,
       });
     } catch (err) {
       console.error("bookReservation from email webhook failed:", err);
@@ -160,6 +170,9 @@ export async function POST(req: NextRequest) {
             occasion: null,
             notes: parsed.notes,
             source: "email",
+            depositRequired,
+            depositAmount,
+            depositReference: parsed.depositReference,
           });
         } catch (err) {
           console.error("Failed to send staff notification email:", err);

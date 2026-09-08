@@ -77,6 +77,9 @@ export async function bookReservation(input: {
   time: string;
   occasion: string | null;
   notes: string | null;
+  depositRequired: number;
+  depositAmount: number;
+  depositReference: string | null;
 }): Promise<BookResult> {
   if (!hasRemoteDatabase()) {
     return bookLocalReservation(input);
@@ -86,7 +89,8 @@ export async function bookReservation(input: {
   const rows = (await sql`
     select * from book_reservation(
       ${input.name}, ${input.email}, ${input.phone}, ${input.partySize},
-      ${input.date}, ${input.time}, ${input.occasion}, ${input.notes}
+      ${input.date}, ${input.time}, ${input.occasion}, ${input.notes},
+      ${input.depositRequired}, ${input.depositAmount}, ${input.depositReference}
     )
   `) as BookResult[];
 
@@ -96,6 +100,7 @@ export async function bookReservation(input: {
       code: null,
       status: "unknown_slot" as const,
       remaining: null,
+      depositRequired: null,
     }
   );
 }
@@ -125,6 +130,10 @@ export async function getReservationByCode(
     date: r.reservationDate,
     time: r.reservationTime.slice(0, 5),
     status: r.status,
+    depositRequired: r.depositRequired,
+    depositAmount: r.depositAmount,
+    depositReference: r.depositReference,
+    depositVerified: r.depositVerified,
   };
 }
 

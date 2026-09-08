@@ -1,4 +1,4 @@
-﻿import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { rmSync } from "node:fs";
 import path from "node:path";
 import {
@@ -6,23 +6,30 @@ import {
   bookLocalReservation,
   cancelLocalReservation,
   getLocalReservationByCode,
+  markLocalDepositVerified,
   __resetLocalStoreForTests,
 } from "./localStore";
 
 const DATA_FILE = path.join(process.cwd(), ".data", "local-reservations.json");
 
+const DEPOSIT_PER_PERSON = 30000;
+
 function baseInput(
   overrides: Partial<Parameters<typeof bookLocalReservation>[0]> = {},
 ) {
+  const partySize = overrides.partySize ?? 4;
   return {
     name: "Ana Torres",
     email: null,
     phone: null,
-    partySize: 4,
+    partySize,
     date: "2099-01-01",
     time: "16:00",
     occasion: null,
     notes: null,
+    depositRequired: partySize * DEPOSIT_PER_PERSON,
+    depositAmount: partySize * DEPOSIT_PER_PERSON,
+    depositReference: null,
     ...overrides,
   };
 }
@@ -39,7 +46,7 @@ afterEach(() => {
 });
 
 describe("localStore", () => {
-  it("seeds default slots (16:00-21:00 every 30 min, capacity 30) with zero booked", async () => {
+  it("seeds default slots (16:00–21:00 every 30 min, capacity 30) with zero booked", async () => {
     const slots = await getLocalAvailability("2099-01-01");
     expect(slots).toHaveLength(11);
     expect(slots[0]).toEqual({ time: "16:00", capacity: 30, booked: 0 });
@@ -113,6 +120,60 @@ describe("localStore", () => {
   });
 });
 
+describe("deposit", () => {
+  it("rejects a booking whose declared deposit is below what's required", async () => {
+    const result = await bookLocalReservation(
+      baseInput({ partySize: 2, depositAmount: 59_999 }),
+    );
+    expect(result.status).toBe("deposit_too_low");
+    expect(result.depositRequired).toBe(60_000);
+    expect(result.id).toBeNull();
+  });
+
+  it("accepts a booking whose deposit exactly matches what's required", async () => {
+    const result = await bookLocalReservation(
+      baseInput({ partySize: 2, depositAmount: 60_000 }),
+    );
+    expect(result.status).toBe("confirmed");
+  });
+
+  it("accepts a deposit larger than required (e.g. rounded up for a transfer)", async () => {
+    const result = await bookLocalReservation(
+      baseInput({ partySize: 2, depositAmount: 65_000 }),
+    );
+    expect(result.status).toBe("confirmed");
+  });
+
+  it("stores the reported deposit amount and reference, starting unverified", async () => {
+    const booked = await bookLocalReservation(
+      baseInput({
+        partySize: 3,
+        depositAmount: 90_000,
+        depositReference: "DEP-A3F9K2",
+      }),
+    );
+    const found = await getLocalReservationByCode(booked.code!);
+    expect(found?.depositRequired).toBe(90_000);
+    expect(found?.depositAmount).toBe(90_000);
+    expect(found?.depositReference).toBe("DEP-A3F9K2");
+    expect(found?.depositVerified).toBe(false);
+  });
+
+  it("lets staff mark a deposit as verified", async () => {
+    const booked = await bookLocalReservation(baseInput());
+    const marked = await markLocalDepositVerified(booked.code!);
+    expect(marked).toBe(true);
+
+    const found = await getLocalReservationByCode(booked.code!);
+    expect(found?.depositVerified).toBe(true);
+  });
+
+  it("returns false when marking an unknown code as verified", async () => {
+    const marked = await markLocalDepositVerified("PON-ZZZZZZ");
+    expect(marked).toBe(false);
+  });
+});
+
 describe("cancelLocalReservation", () => {
   it("cancels a confirmed reservation (by code) and frees its capacity", async () => {
     const booked = await bookLocalReservation(
@@ -154,10 +215,10 @@ describe("cancelLocalReservation", () => {
 
   it("blocks cancellation inside the 2h cutoff and leaves the reservation confirmed", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date(2099, 0, 1, 0, 0));
+    vi.setSystemTime(new Date(2099, 0, 1, 0, 0)); // far before 16:00, booking allowed
     const booked = await bookLocalReservation(baseInput());
 
-    vi.setSystemTime(new Date(2099, 0, 1, 15, 0));
+    vi.setSystemTime(new Date(2099, 0, 1, 15, 0)); // 1h before the 16:00 slot
     const result = await cancelLocalReservation(booked.code!);
     expect(result).toEqual({
       status: "too_late",
@@ -203,6 +264,10 @@ describe("getLocalReservationByCode", () => {
       date: "2099-01-01",
       time: "16:00",
       status: "confirmed",
+      depositRequired: 120000,
+      depositAmount: 120000,
+      depositReference: null,
+      depositVerified: false,
     });
   });
 

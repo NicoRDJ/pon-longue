@@ -28,6 +28,10 @@ type LocalReservation = {
   occasion: string | null;
   notes: string | null;
   status: ReservationStatus;
+  depositRequired: number;
+  depositAmount: number;
+  depositReference: string | null;
+  depositVerified: boolean;
   createdAt: string;
 };
 
@@ -41,8 +45,14 @@ type StoreData = {
 export type BookResult = {
   id: string | null;
   code: string | null;
-  status: "confirmed" | "full" | "unknown_slot" | "invalid_party_size";
+  status:
+    | "confirmed"
+    | "full"
+    | "unknown_slot"
+    | "invalid_party_size"
+    | "deposit_too_low";
   remaining: number | null;
+  depositRequired: number | null;
 };
 
 export type ReservationSummary = {
@@ -54,6 +64,10 @@ export type ReservationSummary = {
   date: string;
   time: string;
   status: ReservationStatus;
+  depositRequired: number;
+  depositAmount: number;
+  depositReference: string | null;
+  depositVerified: boolean;
 };
 
 export type CancelResult = {
@@ -198,6 +212,9 @@ export async function bookLocalReservation(input: {
   time: string;
   occasion: string | null;
   notes: string | null;
+  depositRequired: number;
+  depositAmount: number;
+  depositReference: string | null;
 }): Promise<BookResult> {
   if (!input.partySize || input.partySize < 1) {
     return {
@@ -205,6 +222,17 @@ export async function bookLocalReservation(input: {
       code: null,
       status: "invalid_party_size",
       remaining: null,
+      depositRequired: null,
+    };
+  }
+
+  if (input.depositAmount < input.depositRequired) {
+    return {
+      id: null,
+      code: null,
+      status: "deposit_too_low",
+      remaining: null,
+      depositRequired: input.depositRequired,
     };
   }
 
@@ -212,7 +240,13 @@ export async function bookLocalReservation(input: {
     const data = load();
     const slot = data.slots.find((s) => s.slotTime === input.time);
     if (!slot) {
-      return { id: null, code: null, status: "unknown_slot", remaining: null };
+      return {
+        id: null,
+        code: null,
+        status: "unknown_slot",
+        remaining: null,
+        depositRequired: null,
+      };
     }
 
     const booked = data.reservations
@@ -230,6 +264,7 @@ export async function bookLocalReservation(input: {
         code: null,
         status: "full",
         remaining: Math.max(slot.capacity - booked, 0),
+        depositRequired: input.depositRequired,
       };
     }
 
@@ -245,6 +280,10 @@ export async function bookLocalReservation(input: {
       occasion: input.occasion,
       notes: input.notes,
       status: "confirmed",
+      depositRequired: input.depositRequired,
+      depositAmount: input.depositAmount,
+      depositReference: input.depositReference,
+      depositVerified: false,
       createdAt: new Date().toISOString(),
     };
     data.reservations.push(reservation);
@@ -255,6 +294,7 @@ export async function bookLocalReservation(input: {
       code: reservation.confirmationCode,
       status: "confirmed",
       remaining: Math.max(slot.capacity - booked - input.partySize, 0),
+      depositRequired: input.depositRequired,
     };
   });
 }
@@ -277,6 +317,10 @@ export async function getLocalReservationByCode(
     date: r.reservationDate,
     time: r.reservationTime,
     status: r.status,
+    depositRequired: r.depositRequired,
+    depositAmount: r.depositAmount,
+    depositReference: r.depositReference,
+    depositVerified: r.depositVerified,
   };
 }
 
@@ -319,6 +363,22 @@ export async function cancelLocalReservation(
       time: r.reservationTime,
     };
   });
+}
+
+// Marks a reservation's deposit as manually verified by staff, once they
+// confirm the transfer against the bank statement using the deposit
+// reference. Not wired up to any UI yet (no admin panel exists) — call
+// it from a one-off script for now.
+export async function markLocalDepositVerified(code: string): Promise<boolean> {
+  const data = load();
+  const normalized = code.trim().toUpperCase();
+  const r = data.reservations.find(
+    (res) => res.confirmationCode.toUpperCase() === normalized,
+  );
+  if (!r) return false;
+  r.depositVerified = true;
+  persist(data);
+  return true;
 }
 
 // Test-only: kept as a no-op for compatibility with existing test files —

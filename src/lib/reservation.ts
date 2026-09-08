@@ -96,6 +96,8 @@ export function buildReservationMessage({
   date,
   time,
   notes,
+  depositAmount,
+  depositReference,
 }: {
   lang: Lang;
   name: string;
@@ -103,6 +105,8 @@ export function buildReservationMessage({
   date: string;
   time: string;
   notes: string;
+  depositAmount?: number;
+  depositReference?: string;
 }): string {
   const lines =
     lang === "es"
@@ -113,6 +117,10 @@ export function buildReservationMessage({
           `Fecha: ${date}`,
           `Hora: ${time}`,
           notes ? `Notas: ${notes}` : null,
+          depositAmount != null
+            ? `Depósito transferido: ${depositAmount}`
+            : null,
+          depositReference ? `Referencia: ${depositReference}` : null,
         ]
       : [
           "Hi PON Lounge, I'd like to book a table:",
@@ -121,6 +129,27 @@ export function buildReservationMessage({
           `Date: ${date}`,
           `Time: ${time}`,
           notes ? `Notes: ${notes}` : null,
+          depositAmount != null
+            ? `Deposit transferred: ${depositAmount}`
+            : null,
+          depositReference ? `Reference: ${depositReference}` : null,
         ];
   return lines.filter(Boolean).join("\n");
+}
+
+// Short, human-typeable reference code the customer includes in the
+// bank transfer's "concepto"/description, so staff can find it on the
+// statement without guessing which transaction belongs to whom. Uses a
+// "DEP-" prefix (vs. "PON-" for actual reservation confirmation codes)
+// so the two are never confused. Generated client-side — it only needs
+// to be distinct enough to search for, not globally unique the way a
+// reservation code does, so no server round-trip is needed to produce
+// one.
+export function generateDepositReference(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `DEP-${code}`;
 }

@@ -154,6 +154,16 @@ export const dictionaries = {
     "reserve.codeLabel": "Código de reserva",
     "reserve.codeNote":
       "Guarda este código: lo necesitas para cancelar tu reserva si no puedes venir.",
+    "reserve.depositTitle": "Depósito para confirmar",
+    "reserve.depositExplain":
+      "Se requiere un depósito de {perPerson} por persona. Para {people} personas: {total}. Transfiere ese valor a la cuenta de abajo usando el código de referencia, y cuéntanos cuánto enviaste — verificaremos tu pago manualmente.",
+    "reserve.depositReferenceLabel":
+      "Código de referencia para tu transferencia",
+    "reserve.depositReferenceNote":
+      "Escribe este código en el concepto/descripción de tu transferencia, así lo encontramos más rápido.",
+    "reserve.depositAmountLabel": "Valor que transferiste (COP)",
+    "reserve.depositTooLow":
+      "El depósito mínimo requerido no se ha completado. Verifica el valor antes de confirmar.",
     "reserve.errorFull":
       "Ese horario se acaba de llenar. Elige otra hora disponible.",
     "reserve.errorGeneric":
@@ -387,6 +397,15 @@ export const dictionaries = {
     "reserve.codeLabel": "Confirmation code",
     "reserve.codeNote":
       "Keep this code: you'll need it to cancel your reservation if you can't make it.",
+    "reserve.depositTitle": "Deposit to confirm",
+    "reserve.depositExplain":
+      "A deposit of {perPerson} per guest is required. For {people} guests: {total}. Transfer that amount to the account below using the reference code, and tell us how much you sent — we'll verify your payment manually.",
+    "reserve.depositReferenceLabel": "Reference code for your transfer",
+    "reserve.depositReferenceNote":
+      "Include this code in your transfer's description so we can find it faster.",
+    "reserve.depositAmountLabel": "Amount you transferred (COP)",
+    "reserve.depositTooLow":
+      "The minimum required deposit hasn't been met. Check the amount before confirming.",
     "reserve.errorFull":
       "That time just filled up. Please choose another available slot.",
     "reserve.errorGeneric":

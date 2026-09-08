@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { formatDate, formatTime } from "./reservation";
+import { formatCOP } from "./currency";
 import type { Lang } from "./i18n/dictionaries";
 
 const FROM_ADDRESS = "PON Lounge <reservas@ponlounge.com>";
@@ -330,6 +331,9 @@ export async function sendStaffReservationNotification({
   occasion,
   notes,
   source,
+  depositRequired,
+  depositAmount,
+  depositReference,
 }: {
   staffEmail: string;
   code: string;
@@ -342,6 +346,9 @@ export async function sendStaffReservationNotification({
   occasion: string | null;
   notes: string | null;
   source: "web" | "email";
+  depositRequired: number;
+  depositAmount: number;
+  depositReference: string | null;
 }) {
   const resend = getResendClient();
 
@@ -349,6 +356,7 @@ export async function sendStaffReservationNotification({
     source === "web"
       ? "Formulario de la página"
       : "Correo (reservar por correo)";
+  const depositShort = depositAmount < depositRequired;
 
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0d10;padding:32px;color:#f2ece0;">
@@ -366,6 +374,12 @@ export async function sendStaffReservationNotification({
         ${notes ? `<tr><td style="padding:6px 0;color:#c9c0ae;">Notas</td><td style="padding:6px 0;text-align:right;">${notes}</td></tr>` : ""}
         <tr><td style="padding:6px 0;color:#c9c0ae;">Origen</td><td style="padding:6px 0;text-align:right;">${sourceLabel}</td></tr>
       </table>
+      <div style="margin:20px 0 0;padding:16px;border-radius:10px;background:${depositShort ? "rgba(220,80,80,0.1)" : "rgba(76,175,125,0.08)"};border:1px solid ${depositShort ? "rgba(220,80,80,0.35)" : "rgba(76,175,125,0.25)"};">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${depositShort ? "#e08a8a" : "#8fd6ab"};">Depósito reportado por el cliente</p>
+        <p style="margin:0;font-size:16px;font-weight:bold;">${formatCOP(depositAmount)} <span style="font-weight:normal;color:#c9c0ae;font-size:12px;">/ ${formatCOP(depositRequired)} requeridos</span></p>
+        <p style="margin:8px 0 0;font-size:13px;color:#c9c0ae;">Referencia para buscar en el extracto: <strong style="color:#f2ece0;">${depositReference ?? "no dio ninguna"}</strong></p>
+        ${depositShort ? '<p style="margin:8px 0 0;font-size:12px;color:#e08a8a;">⚠ El monto reportado es menor al requerido — verificar con el cliente.</p>' : ""}
+      </div>
     </div>
   </div>`;
 

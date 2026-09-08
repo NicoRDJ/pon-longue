@@ -9,6 +9,7 @@ import {
   buildReservationMessage,
   formatDate,
   formatTime,
+  generateDepositReference,
 } from "@/lib/reservation";
 import { useCancelReservation } from "@/lib/useCancelReservation";
 import {
@@ -16,7 +17,14 @@ import {
   PHONE_DISPLAY,
   CONTACT_EMAIL,
   WHATSAPP_NUMBER,
+  DEPOSIT_PER_PERSON,
+  calculateDeposit,
+  BANK_NAME,
+  BANK_ACCOUNT_TYPE,
+  BANK_ACCOUNT_NUMBER,
+  BANK_ACCOUNT_HOLDER,
 } from "@/lib/config";
+import { formatCOP } from "@/lib/currency";
 import { VENUE_OPEN_TIME, LAST_RESERVATION_TIME } from "@/lib/hours";
 import ParallaxImage from "@/components/ParallaxImage";
 
@@ -182,6 +190,17 @@ export default function ReservationWizard() {
   const [bookingState, setBookingState] = useState<BookingState>("idle");
   const [reservationCode, setReservationCode] = useState<string | null>(null);
 
+  const depositRequired = useMemo(() => calculateDeposit(people), [people]);
+  const [depositAmountOverride, setDepositAmountOverride] = useState<
+    number | null
+  >(null);
+  const depositAmount = depositAmountOverride ?? depositRequired;
+  const [depositError, setDepositError] = useState<string | null>(null);
+  // Generated once (stable across re-renders/party-size changes) so the
+  // customer references the same code throughout — including if they
+  // switch between the automatic and email paths.
+  const [depositReference] = useState<string>(() => generateDepositReference());
+
   const nameRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const timeGroupRef = useRef<HTMLDivElement>(null);
@@ -309,6 +328,12 @@ export default function ReservationWizard() {
       return;
     }
 
+    if (depositAmount < depositRequired) {
+      setDepositError(t("reserve.depositTooLow"));
+      return;
+    }
+    setDepositError(null);
+
     setBookingState("submitting");
 
     try {
@@ -324,6 +349,8 @@ export default function ReservationWizard() {
           occasion,
           notes,
           lang,
+          depositAmount,
+          depositReference,
         }),
       });
 
@@ -340,6 +367,16 @@ export default function ReservationWizard() {
         setBookingState("full");
         return;
       }
+      if (res.status === 400) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        if (body?.error === "deposit_too_low") {
+          setDepositError(t("reserve.depositTooLow"));
+          setBookingState("idle");
+          return;
+        }
+      }
       setBookingState("error");
     } catch {
       setBookingState("error");
@@ -347,6 +384,12 @@ export default function ReservationWizard() {
   }
 
   function contactManually() {
+    if (channel === "email" && depositAmount < depositRequired) {
+      setDepositError(t("reserve.depositTooLow"));
+      return;
+    }
+    setDepositError(null);
+
     const message = buildReservationMessage({
       lang,
       name,
@@ -354,6 +397,8 @@ export default function ReservationWizard() {
       date,
       time,
       notes,
+      depositAmount: channel === "email" ? depositAmount : undefined,
+      depositReference: channel === "email" ? depositReference : undefined,
     });
 
     if (channel === "call") {
@@ -776,6 +821,79 @@ export default function ReservationWizard() {
                         </p>
                       )}
                     </div>
+
+                    {(liveMode || channel === "email") && (
+                      <div className="border-brass/35 bg-brass/[0.05] mt-4 rounded-2xl border border-dashed p-5">
+                        <div className="text-brass mb-2.5 text-[11px] font-bold tracking-[0.1em] uppercase">
+                          {t("reserve.depositTitle")}
+                        </div>
+                        <p className="text-cream-muted text-[13px]">
+                          {t("reserve.depositExplain")
+                            .replace(
+                              "{perPerson}",
+                              formatCOP(DEPOSIT_PER_PERSON),
+                            )
+                            .replace("{people}", String(people))
+                            .replace("{total}", formatCOP(depositRequired))}
+                        </p>
+
+                        <div className="mt-4 grid gap-2 text-[13px]">
+                          <div className="flex justify-between border-b border-dashed border-white/10 py-1.5">
+                            <span className="text-cream-muted">
+                              {BANK_NAME} ({BANK_ACCOUNT_TYPE})
+                            </span>
+                            <span className="text-cream font-semibold">
+                              {BANK_ACCOUNT_NUMBER}
+                            </span>
+                          </div>
+                          <div className="text-cream-muted text-right text-[12px]">
+                            {BANK_ACCOUNT_HOLDER}
+                          </div>
+                        </div>
+
+                        <div className="border-brass/40 bg-brass/[0.1] mt-4 rounded-xl border border-dashed p-3.5 text-center">
+                          <p className="text-brass mb-1 text-[10px] font-bold tracking-[0.1em] uppercase">
+                            {t("reserve.depositReferenceLabel")}
+                          </p>
+                          <p className="font-display text-cream text-lg tracking-widest">
+                            {depositReference}
+                          </p>
+                          <p className="text-cream-muted mt-1 text-[11px]">
+                            {t("reserve.depositReferenceNote")}
+                          </p>
+                        </div>
+
+                        <div className="mt-4">
+                          <label
+                            htmlFor="deposit-amount"
+                            className="text-cream-muted mb-1.5 block text-xs tracking-[0.06em] uppercase"
+                          >
+                            {t("reserve.depositAmountLabel")}
+                          </label>
+                          <input
+                            id="deposit-amount"
+                            type="number"
+                            min={0}
+                            step={1000}
+                            inputMode="numeric"
+                            value={depositAmount || ""}
+                            onChange={(e) => {
+                              setDepositAmountOverride(
+                                Number(e.target.value) || 0,
+                              );
+                              setDepositError(null);
+                            }}
+                            className="text-cream w-full rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm outline-none focus:border-white/30"
+                          />
+                        </div>
+
+                        {depositError && (
+                          <p className="mt-3 text-[13px] text-[#e08a8a]">
+                            {depositError}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {liveMode && (
                       <div className="mt-5">

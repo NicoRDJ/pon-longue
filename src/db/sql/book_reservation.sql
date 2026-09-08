@@ -2,6 +2,14 @@
 -- reservation in the same statement, so two concurrent requests for the
 -- last open spot can't both succeed (classic check-then-insert race).
 --
+-- Deposit: there's no payment gateway wired up yet. p_deposit_required is
+-- computed by the app (party_size * price per guest) and p_deposit_amount
+-- is what the customer says they transferred — rejected here if it's
+-- less than what's required. p_deposit_reference is a short code the
+-- customer put in the bank transfer's description so staff can find it
+-- on the statement. deposit_verified starts false; staff flips it
+-- manually once they confirm the transfer.
+--
 -- pg_advisory_xact_lock serializes concurrent calls for the *same*
 -- date+time slot (the lock key is derived from them) without blocking
 -- bookings for other slots, and releases automatically at the end of the
@@ -14,8 +22,11 @@ create or replace function book_reservation(
   p_date date,
   p_time time,
   p_occasion text,
-  p_notes text
-) returns table (id uuid, code text, status text, remaining int) as $$
+  p_notes text,
+  p_deposit_required int,
+  p_deposit_amount int,
+  p_deposit_reference text
+) returns table (id uuid, code text, status text, remaining int, deposit_required int) as $$
 declare
   v_capacity int;
   v_booked int;
@@ -23,7 +34,12 @@ declare
   v_code text;
 begin
   if p_party_size is null or p_party_size < 1 then
-    return query select null::uuid, null::text, 'invalid_party_size'::text, null::int;
+    return query select null::uuid, null::text, 'invalid_party_size'::text, null::int, null::int;
+    return;
+  end if;
+
+  if p_deposit_amount < p_deposit_required then
+    return query select null::uuid, null::text, 'deposit_too_low'::text, null::int, p_deposit_required;
     return;
   end if;
 
@@ -34,7 +50,7 @@ begin
   where slot_time = p_time;
 
   if v_capacity is null then
-    return query select null::uuid, null::text, 'unknown_slot'::text, null::int;
+    return query select null::uuid, null::text, 'unknown_slot'::text, null::int, null::int;
     return;
   end if;
 
@@ -45,7 +61,7 @@ begin
     and status = 'confirmed';
 
   if v_booked + p_party_size > v_capacity then
-    return query select null::uuid, null::text, 'full'::text, greatest(v_capacity - v_booked, 0);
+    return query select null::uuid, null::text, 'full'::text, greatest(v_capacity - v_booked, 0), p_deposit_required;
     return;
   end if;
 
@@ -57,12 +73,14 @@ begin
   end loop;
 
   insert into reservations
-    (confirmation_code, name, email, phone, party_size, reservation_date, reservation_time, occasion, notes, status)
+    (confirmation_code, name, email, phone, party_size, reservation_date, reservation_time,
+     occasion, notes, status, deposit_required, deposit_amount, deposit_reference, deposit_verified)
   values
-    (v_code, p_name, p_email, p_phone, p_party_size, p_date, p_time, p_occasion, p_notes, 'confirmed')
+    (v_code, p_name, p_email, p_phone, p_party_size, p_date, p_time, p_occasion, p_notes,
+     'confirmed', p_deposit_required, p_deposit_amount, p_deposit_reference, false)
   returning reservations.id into v_new_id;
 
   return query
-    select v_new_id, v_code, 'confirmed'::text, greatest(v_capacity - v_booked - p_party_size, 0);
+    select v_new_id, v_code, 'confirmed'::text, greatest(v_capacity - v_booked - p_party_size, 0), p_deposit_required;
 end;
 $$ language plpgsql;

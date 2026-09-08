@@ -13,8 +13,33 @@ export const PHONE_DISPLAY =
 export const CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_RESERVATIONS_EMAIL ?? "hola@ponlounge.co";
 
+// Optional: a real inbox (e.g. the owner's Gmail) that gets a copy of
+// every confirmed reservation, regardless of whether it came from the
+// website form or the "reservar por correo" email flow. Server-only
+// (no NEXT_PUBLIC_ prefix) since it's never read in client code — only
+// used inside the API routes that confirm a booking. Left unset during
+// development/testing so test reservations don't spam a real inbox;
+// set it in .env.local once ready to go live.
 export const STAFF_NOTIFICATION_EMAIL =
   process.env.STAFF_NOTIFICATION_EMAIL || null;
+
+// --- Reservation deposit (manual bank transfer, verified by staff) ---
+// There's no payment gateway wired up yet — the customer transfers this
+// amount to the account below, using a reference code the wizard
+// generates, and reports what they transferred. Staff matches that
+// reference against the bank statement to verify it manually.
+export const DEPOSIT_PER_PERSON = Number(
+  process.env.NEXT_PUBLIC_DEPOSIT_PER_PERSON ?? "30000",
+);
+
+export function calculateDeposit(partySize: number): number {
+  return DEPOSIT_PER_PERSON * Math.max(partySize, 0);
+}
+
+export const BANK_NAME = "Davivienda";
+export const BANK_ACCOUNT_TYPE = "Ahorros";
+export const BANK_ACCOUNT_NUMBER = "0550108900878373";
+export const BANK_ACCOUNT_HOLDER = "P.O.N Musical Sound S.A.S · NIT 9019150013";
 
 export const ADDRESS_LINE =
   process.env.NEXT_PUBLIC_ADDRESS ??

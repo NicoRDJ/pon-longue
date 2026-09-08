@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  boolean,
   date,
   time,
   timestamp,
@@ -31,6 +32,14 @@ export const reservations = pgTable("reservations", {
   occasion: text("occasion"),
   notes: text("notes"),
   status: reservationStatus("status").notNull().default("confirmed"),
+  // Deposit is self-declared by the customer (amount + a reference code
+  // they put in the bank transfer's description) and verified manually
+  // by staff against the bank statement — there's no payment gateway
+  // wired up yet.
+  depositRequired: integer("deposit_required").notNull().default(0),
+  depositAmount: integer("deposit_amount").notNull().default(0),
+  depositReference: text("deposit_reference"),
+  depositVerified: boolean("deposit_verified").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
