@@ -1,4 +1,4 @@
-﻿import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const MOCK_SLOTS = [
   { time: "18:00", capacity: 40, booked: 6 },
@@ -25,8 +25,9 @@ async function mockReservationOutcome(
           json: {
             id: "test-id",
             code: "PON-TEST01",
-            status: "confirmed",
+            status: "pending_deposit",
             remaining: 5,
+            depositRequired: 30000,
           },
         })
       : route.fulfill({
@@ -34,6 +35,30 @@ async function mockReservationOutcome(
           json: { error: "full", remaining: 0 },
         }),
   );
+}
+
+// Every booking now requires the customer to upload a screenshot of their
+// deposit transfer before the confirm button is even enabled — this
+// mocks that upload endpoint and simulates attaching a small fake image
+// so the flow can proceed past that gate in tests.
+async function mockReceiptUpload(page: Page) {
+  await page.route("**/api/deposit-receipts", (route) =>
+    route.fulfill({ status: 201, json: { status: "ok" } }),
+  );
+}
+
+async function uploadFakeReceipt(page: Page) {
+  await page.locator("#deposit-receipt").setInputFiles({
+    name: "comprobante.png",
+    mimeType: "image/png",
+    // Smallest possible valid PNG — content doesn't matter, only that
+    // it's accepted as a file of the right type by the input+mocked API.
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "base64",
+    ),
+  });
+  await expect(page.getByText("Comprobante recibido.")).toBeVisible();
 }
 
 test.describe("Reservation wizard - live availability (mocked API)", () => {
@@ -63,11 +88,39 @@ test.describe("Reservation wizard - live availability (mocked API)", () => {
     await expect(fullSlot).toHaveAttribute("aria-checked", "false");
   });
 
-  test("full happy path confirms automatically and offers a calendar download", async ({
+  test("the confirm button stays disabled until a receipt is uploaded", async ({
     page,
   }) => {
     await mockAvailability(page);
     await mockReservationOutcome(page, "confirmed");
+    await mockReceiptUpload(page);
+
+    await page.goto("/#reservas");
+    await page.locator("#reservas").scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rDate").fill("2026-09-01");
+    await page.locator('[role="radio"]:not([disabled])').first().click();
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await page.locator("#rName").fill("Ana Torres");
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    const confirmButton = page.getByRole("button", {
+      name: "Confirmar reserva",
+    });
+    await expect(confirmButton).toBeDisabled();
+
+    await uploadFakeReceipt(page);
+    await expect(confirmButton).toBeEnabled();
+  });
+
+  test("full happy path submits the deposit request and offers a calendar download", async ({
+    page,
+  }) => {
+    await mockAvailability(page);
+    await mockReservationOutcome(page, "confirmed");
+    await mockReceiptUpload(page);
 
     await page.goto("/#reservas");
     await page.locator("#reservas").scrollIntoViewIfNeeded();
@@ -87,20 +140,23 @@ test.describe("Reservation wizard - live availability (mocked API)", () => {
     await page.getByRole("button", { name: "Siguiente" }).click();
 
     await expect(page.getByText("Ana Torres")).toBeVisible();
-    await expect(page.getByText("3 personas")).toBeVisible();
+    await expect(page.getByText("3 personas", { exact: true })).toBeVisible();
 
+    await uploadFakeReceipt(page);
     await page.getByRole("button", { name: "Confirmar reserva" }).click();
-    await expect(page.getByText("¡Reserva confirmada!")).toBeVisible();
+
+    await expect(page.getByText("¡Solicitud recibida!")).toBeVisible();
     await expect(
       page.getByRole("button", { name: /Agregar a mi calendario/ }),
     ).toBeVisible();
   });
 
-  test("lets the customer cancel right after confirming, with a confirm step", async ({
+  test("lets the customer cancel right after submitting, with a confirm step", async ({
     page,
   }) => {
     await mockAvailability(page);
     await mockReservationOutcome(page, "confirmed");
+    await mockReceiptUpload(page);
     await page.route("**/api/reservations/*/cancel", (route) =>
       route.fulfill({
         status: 200,
@@ -118,8 +174,10 @@ test.describe("Reservation wizard - live availability (mocked API)", () => {
 
     await page.locator("#rName").fill("Ana Torres");
     await page.getByRole("button", { name: "Siguiente" }).click();
+
+    await uploadFakeReceipt(page);
     await page.getByRole("button", { name: "Confirmar reserva" }).click();
-    await expect(page.getByText("¡Reserva confirmada!")).toBeVisible();
+    await expect(page.getByText("¡Solicitud recibida!")).toBeVisible();
 
     await page.getByRole("button", { name: "Cancelar reserva" }).click();
     await expect(
@@ -135,6 +193,7 @@ test.describe("Reservation wizard - live availability (mocked API)", () => {
   }) => {
     await mockAvailability(page);
     await mockReservationOutcome(page, "full");
+    await mockReceiptUpload(page);
 
     await page.goto("/#reservas");
     await page.locator("#reservas").scrollIntoViewIfNeeded();
@@ -147,6 +206,7 @@ test.describe("Reservation wizard - live availability (mocked API)", () => {
     await page.locator("#rName").fill("Ana Torres");
     await page.getByRole("button", { name: "Siguiente" }).click();
 
+    await uploadFakeReceipt(page);
     await page.getByRole("button", { name: "Confirmar reserva" }).click();
     await expect(
       page.getByText("Ese horario se acaba de llenar"),
@@ -183,7 +243,9 @@ test.describe("Reservation wizard - fallback (no live availability)", () => {
     await page.getByRole("button", { name: "Siguiente" }).click();
 
     // No automatic "Confirmar reserva" button in fallback mode - only the
-    // manual channel-based contact options.
+    // manual channel-based contact options. The default channel
+    // (WhatsApp) isn't gated by the deposit/receipt requirement, which
+    // only applies to the live-availability path and the email channel.
     await expect(
       page.getByRole("button", { name: "Confirmar reserva" }),
     ).toHaveCount(0);
