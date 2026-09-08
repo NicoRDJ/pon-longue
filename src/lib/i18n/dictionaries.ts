@@ -178,6 +178,8 @@ export const dictionaries = {
     "reserve.emailLockTitle": "Ya enviaste tu solicitud por correo",
     "reserve.emailLockBody":
       "Revisa tu bandeja de entrada: te llegará la confirmación en cuanto verifiquemos tu depósito. Para evitar reservas duplicadas, no puedes hacer otra reserva desde esta página por ahora.",
+    "reserve.emailLockManageLink":
+      "¿Ya tienes tu código? Cancela o consulta tu reserva aquí",
     "reserve.emailLockReset": "Fue un error, quiero reservar de otra forma",
     "reserve.errorFull":
       "Ese horario se acaba de llenar. Elige otra hora disponible.",
@@ -435,6 +437,8 @@ export const dictionaries = {
     "reserve.emailLockTitle": "You've already sent your email request",
     "reserve.emailLockBody":
       "Check your inbox — you'll get a confirmation once we verify your deposit. To avoid duplicate reservations, you can't submit another one from this page for now.",
+    "reserve.emailLockManageLink":
+      "Already have your code? Cancel or check your reservation here",
     "reserve.emailLockReset": "That was a mistake, let me book another way",
     "reserve.errorFull":
       "That time just filled up. Please choose another available slot.",

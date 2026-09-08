@@ -552,13 +552,21 @@ export default function ReservationWizard() {
             <p className="text-cream-muted text-sm">
               {t("reserve.emailLockBody")}
             </p>
-            <button
-              type="button"
-              onClick={unlockEmailReservation}
-              className="text-brass-light mt-5 text-[13px] underline underline-offset-2"
+            <Link
+              href="/cancelar"
+              className="text-brass-light mt-4 inline-block text-[13px] underline underline-offset-2"
             >
-              {t("reserve.emailLockReset")}
-            </button>
+              {t("reserve.emailLockManageLink")}
+            </Link>
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={unlockEmailReservation}
+                className="text-cream-muted text-[12px] underline underline-offset-2"
+              >
+                {t("reserve.emailLockReset")}
+              </button>
+            </div>
           </div>
         </div>
       </section>
