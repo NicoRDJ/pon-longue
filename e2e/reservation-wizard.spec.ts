@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+﻿import { test, expect, type Page } from "@playwright/test";
 
 const MOCK_SLOTS = [
   { time: "18:00", capacity: 40, booked: 6 },
@@ -22,7 +22,12 @@ async function mockReservationOutcome(
     outcome === "confirmed"
       ? route.fulfill({
           status: 201,
-          json: { id: "test-id", status: "confirmed", remaining: 5 },
+          json: {
+            id: "test-id",
+            code: "PON-TEST01",
+            status: "confirmed",
+            remaining: 5,
+          },
         })
       : route.fulfill({
           status: 409,
@@ -31,7 +36,7 @@ async function mockReservationOutcome(
   );
 }
 
-test.describe("Reservation wizard — live availability (mocked API)", () => {
+test.describe("Reservation wizard - live availability (mocked API)", () => {
   test("blocks advancing past step 2 without date and time", async ({
     page,
   }) => {
@@ -151,7 +156,7 @@ test.describe("Reservation wizard — live availability (mocked API)", () => {
   });
 });
 
-test.describe("Reservation wizard — fallback (no live availability)", () => {
+test.describe("Reservation wizard - fallback (no live availability)", () => {
   test("degrades to a manual time input and WhatsApp/call/email contact", async ({
     page,
   }) => {
@@ -177,7 +182,7 @@ test.describe("Reservation wizard — fallback (no live availability)", () => {
     await page.locator("#rName").fill("Ana Torres");
     await page.getByRole("button", { name: "Siguiente" }).click();
 
-    // No automatic "Confirmar reserva" button in fallback mode — only the
+    // No automatic "Confirmar reserva" button in fallback mode - only the
     // manual channel-based contact options.
     await expect(
       page.getByRole("button", { name: "Confirmar reserva" }),

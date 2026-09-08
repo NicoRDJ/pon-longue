@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 
 // Unlike reservation-wizard.spec.ts, this suite deliberately does NOT mock
-// the reservations API: /cancelar/[id] fetches its reservation server-side
-// (a Server Component calling the store directly), which page.route() can't
-// intercept — only real requests reach it. Each test books a real
-// (local-store) reservation on its own far-future date to avoid any
-// capacity collision with other parallel tests.
+// the reservations API: /cancelar/[code] fetches its reservation
+// server-side (a Server Component calling the store directly), which
+// page.route() can't intercept - only real requests reach it. Each test
+// books a real (local-store) reservation on its own far-future date to
+// avoid any capacity collision with other parallel tests.
 
 test.describe("Standalone cancellation page", () => {
   test("shows reservation details and cancels on confirm", async ({
@@ -23,9 +23,9 @@ test.describe("Standalone cancellation page", () => {
       },
     });
     expect(bookRes.status()).toBe(201);
-    const { id } = await bookRes.json();
+    const { code } = await bookRes.json();
 
-    await page.goto(`/cancelar/${id}`);
+    await page.goto(`/cancelar/${code}`);
     await expect(page.getByText("Carlos Ruiz")).toBeVisible();
     const confirmButton = page.getByRole("button", {
       name: "Confirmar cancelación",
@@ -50,15 +50,15 @@ test.describe("Standalone cancellation page", () => {
         lang: "es",
       },
     });
-    const { id } = await bookRes.json();
-    await request.post(`/api/reservations/${id}/cancel`);
+    const { code } = await bookRes.json();
+    await request.post(`/api/reservations/${code}/cancel`);
 
-    await page.goto(`/cancelar/${id}`);
+    await page.goto(`/cancelar/${code}`);
     await expect(page.getByText("Esta reserva ya fue cancelada")).toBeVisible();
   });
 
-  test("shows a not-found state for an unknown id", async ({ page }) => {
-    await page.goto("/cancelar/00000000-0000-0000-0000-000000000000");
+  test("shows a not-found state for an unknown code", async ({ page }) => {
+    await page.goto("/cancelar/PON-ZZZZZZ");
     await expect(page.getByText("No encontramos esta reserva")).toBeVisible();
   });
 });
