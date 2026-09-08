@@ -312,14 +312,196 @@ export async function sendManualReviewAlert({
   }
 }
 
-// Internal "you've got a new reservation" copy sent to the venue's real
-// inbox (STAFF_NOTIFICATION_EMAIL) for every CONFIRMED booking — from
-// the website form or the "reservar por correo" email flow alike. Purely
-// informational: the reservation is already saved either way; this just
-// means staff doesn't have to check the system to know one came in.
-// Best-effort — callers should catch/log rather than let this affect
-// the booking response.
-export async function sendStaffReservationNotification({
+// Sent to the customer right after they submit a reservation with a
+// deposit — NOT a confirmation. Their code is included so they can look
+// up the status later, but the copy is deliberately non-celebratory:
+// the reservation isn't final until staff verifies the transfer.
+export async function sendDepositPendingNotice({
+  to,
+  code,
+  name,
+  partySize,
+  date,
+  time,
+  lang,
+}: {
+  to: string;
+  code: string;
+  name: string;
+  partySize: number;
+  date: string;
+  time: string;
+  lang: Lang;
+}) {
+  const resend = getResendClient();
+
+  const t =
+    lang === "es"
+      ? {
+          subject: `Recibimos tu solicitud — PON Lounge, ${formatDate(date, lang)}`,
+          heading: "Recibimos tu solicitud de reserva",
+          greeting: `Hola ${name},`,
+          body: "Estamos verificando tu depósito. En cuanto lo confirmemos, te llega un correo con la reserva ya lista.",
+          people: "Personas",
+          date: "Fecha",
+          time: "Hora",
+          codeLabel: "Código de referencia",
+          codeNote:
+            "Guárdalo — lo puedes usar para consultar el estado de tu solicitud.",
+          footer: "¿Dudas? Escríbenos por WhatsApp.",
+        }
+      : {
+          subject: `We received your request — PON Lounge, ${formatDate(date, lang)}`,
+          heading: "We received your reservation request",
+          greeting: `Hi ${name},`,
+          body: "We're verifying your deposit. Once confirmed, you'll get an email with your reservation all set.",
+          people: "Guests",
+          date: "Date",
+          time: "Time",
+          codeLabel: "Reference code",
+          codeNote: "Keep it — you can use it to check your request's status.",
+          footer: "Questions? Message us on WhatsApp.",
+        };
+
+  const html = `
+  <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0d10;padding:32px;color:#f2ece0;">
+    <div style="max-width:480px;margin:0 auto;background:#14181d;border:1px solid rgba(242,236,224,0.12);border-radius:16px;padding:32px;">
+      <p style="color:#b98d4b;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">PON Lounge</p>
+      <h1 style="font-size:20px;margin:0 0 16px;color:#f2ece0;">${t.heading}</h1>
+      <p style="margin:0 0 8px;">${t.greeting}</p>
+      <p style="margin:0 0 20px;color:#c9c0ae;">${t.body}</p>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="padding:8px 0;color:#c9c0ae;border-bottom:1px dashed rgba(242,236,224,0.15);">${t.people}</td>
+          <td style="padding:8px 0;text-align:right;font-weight:bold;border-bottom:1px dashed rgba(242,236,224,0.15);">${partySize}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#c9c0ae;border-bottom:1px dashed rgba(242,236,224,0.15);">${t.date}</td>
+          <td style="padding:8px 0;text-align:right;font-weight:bold;border-bottom:1px dashed rgba(242,236,224,0.15);">${formatDate(date, lang)}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#c9c0ae;">${t.time}</td>
+          <td style="padding:8px 0;text-align:right;font-weight:bold;">${formatTime(time)}</td>
+        </tr>
+      </table>
+      <div style="margin:20px 0 0;padding:14px;border:1px dashed rgba(185,141,75,0.5);border-radius:10px;text-align:center;">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#b98d4b;">${t.codeLabel}</p>
+        <p style="margin:0;font-size:18px;font-weight:bold;letter-spacing:2px;color:#f2ece0;">${code}</p>
+        <p style="margin:6px 0 0;font-size:11px;color:#c9c0ae;">${t.codeNote}</p>
+      </div>
+      <p style="margin:16px 0 0;font-size:13px;color:#c9c0ae;">${t.footer}</p>
+    </div>
+  </div>`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to,
+    subject: t.subject,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`);
+  }
+}
+
+// Sent to the customer once staff APPROVES the deposit — this is the
+// real, celebratory confirmation (equivalent to what used to be sent
+// immediately before the review step existed).
+export async function sendDepositApprovedEmail({
+  to,
+  code,
+  name,
+  partySize,
+  date,
+  time,
+  lang,
+}: {
+  to: string;
+  code: string;
+  name: string;
+  partySize: number;
+  date: string;
+  time: string;
+  lang: Lang;
+}) {
+  await sendReservationConfirmation({
+    to,
+    code,
+    name,
+    partySize,
+    date,
+    time,
+    lang,
+  });
+}
+
+// Sent to the customer if staff REJECTS the deposit (couldn't verify the
+// transfer). Invites them to try again or reach out.
+export async function sendDepositRejectedEmail({
+  to,
+  name,
+  date,
+  time,
+  lang,
+}: {
+  to: string;
+  name: string;
+  date: string;
+  time: string;
+  lang: Lang;
+}) {
+  const resend = getResendClient();
+
+  const t =
+    lang === "es"
+      ? {
+          subject: "No pudimos verificar tu depósito — PON Lounge",
+          heading: "No pudimos confirmar tu reserva",
+          greeting: `Hola ${name},`,
+          body: "No logramos verificar el depósito para la reserva que solicitaste. Si crees que fue un error, o si quieres intentar de nuevo, escríbenos por WhatsApp y te ayudamos.",
+          footer:
+            "Puedes hacer una nueva solicitud desde la página cuando quieras.",
+        }
+      : {
+          subject: "We couldn't verify your deposit — PON Lounge",
+          heading: "We couldn't confirm your reservation",
+          greeting: `Hi ${name},`,
+          body: "We weren't able to verify the deposit for the reservation you requested. If you think this is a mistake, or you'd like to try again, message us on WhatsApp and we'll help.",
+          footer:
+            "You're welcome to submit a new request from the website anytime.",
+        };
+
+  const html = `
+  <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0d10;padding:32px;color:#f2ece0;">
+    <div style="max-width:480px;margin:0 auto;background:#14181d;border:1px solid rgba(242,236,224,0.12);border-radius:16px;padding:32px;">
+      <p style="color:#b98d4b;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">PON Lounge</p>
+      <h1 style="font-size:20px;margin:0 0 16px;color:#f2ece0;">${t.heading}</h1>
+      <p style="margin:0 0 8px;">${t.greeting}</p>
+      <p style="margin:0 0 20px;color:#c9c0ae;">${t.body}</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;color:#c9c0ae;">
+        <tr><td style="padding:4px 0;">${date} · ${time}</td></tr>
+      </table>
+      <p style="margin:16px 0 0;font-size:13px;color:#c9c0ae;">${t.footer}</p>
+    </div>
+  </div>`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to,
+    subject: t.subject,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`);
+  }
+}
+
+// Internal alert sent to staff for EVERY pending deposit — not gated by
+// whether the customer's own confirmation succeeded, since this is what
+// tells a human "go check /admin".
+export async function sendStaffDepositReviewAlert({
   staffEmail,
   code,
   name,
@@ -356,12 +538,11 @@ export async function sendStaffReservationNotification({
     source === "web"
       ? "Formulario de la página"
       : "Correo (reservar por correo)";
-  const depositShort = depositAmount < depositRequired;
 
   const html = `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0d10;padding:32px;color:#f2ece0;">
     <div style="max-width:520px;margin:0 auto;background:#14181d;border:1px solid rgba(242,236,224,0.12);border-radius:16px;padding:32px;">
-      <p style="color:#8fd6ab;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Nueva reserva confirmada</p>
+      <p style="color:#e0b458;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Depósito pendiente de verificar</p>
       <h1 style="font-size:20px;margin:0 0 20px;color:#f2ece0;">${code}</h1>
       <table style="width:100%;border-collapse:collapse;font-size:14px;">
         <tr><td style="padding:6px 0;color:#c9c0ae;">Nombre</td><td style="padding:6px 0;text-align:right;font-weight:bold;">${name}</td></tr>
@@ -374,19 +555,19 @@ export async function sendStaffReservationNotification({
         ${notes ? `<tr><td style="padding:6px 0;color:#c9c0ae;">Notas</td><td style="padding:6px 0;text-align:right;">${notes}</td></tr>` : ""}
         <tr><td style="padding:6px 0;color:#c9c0ae;">Origen</td><td style="padding:6px 0;text-align:right;">${sourceLabel}</td></tr>
       </table>
-      <div style="margin:20px 0 0;padding:16px;border-radius:10px;background:${depositShort ? "rgba(220,80,80,0.1)" : "rgba(76,175,125,0.08)"};border:1px solid ${depositShort ? "rgba(220,80,80,0.35)" : "rgba(76,175,125,0.25)"};">
-        <p style="margin:0 0 4px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${depositShort ? "#e08a8a" : "#8fd6ab"};">Depósito reportado por el cliente</p>
+      <div style="margin:20px 0 0;padding:16px;border-radius:10px;background:rgba(224,180,88,0.1);border:1px solid rgba(224,180,88,0.35);">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#e0b458;">Depósito reportado por el cliente</p>
         <p style="margin:0;font-size:16px;font-weight:bold;">${formatCOP(depositAmount)} <span style="font-weight:normal;color:#c9c0ae;font-size:12px;">/ ${formatCOP(depositRequired)} requeridos</span></p>
         <p style="margin:8px 0 0;font-size:13px;color:#c9c0ae;">Referencia para buscar en el extracto: <strong style="color:#f2ece0;">${depositReference ?? "no dio ninguna"}</strong></p>
-        ${depositShort ? '<p style="margin:8px 0 0;font-size:12px;color:#e08a8a;">⚠ El monto reportado es menor al requerido — verificar con el cliente.</p>' : ""}
       </div>
+      <p style="margin:16px 0 0;font-size:12px;color:#c9c0ae;">Revisa y aprueba/rechaza esta reserva en /admin.</p>
     </div>
   </div>`;
 
   const { error } = await resend.emails.send({
     from: FROM_ADDRESS,
     to: staffEmail,
-    subject: `Nueva reserva — ${name} (${partySize}p, ${formatDate(date, "es")})`,
+    subject: `Verificar depósito — ${code} (${name})`,
     html,
   });
 

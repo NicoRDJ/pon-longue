@@ -6,7 +6,9 @@ import {
   bookLocalReservation,
   cancelLocalReservation,
   getLocalReservationByCode,
-  markLocalDepositVerified,
+  getLocalPendingDeposits,
+  approveLocalDeposit,
+  rejectLocalDeposit,
   __resetLocalStoreForTests,
 } from "./localStore";
 
@@ -54,29 +56,22 @@ describe("localStore", () => {
     expect(slots.every((s) => s.capacity === 30)).toBe(true);
   });
 
-  it("books a reservation, returns a confirmation code, and reflects it in availability", async () => {
+  it("books a reservation as pending_deposit, returns a code, and does NOT count it in availability yet", async () => {
     const result = await bookLocalReservation(baseInput());
-    expect(result.status).toBe("confirmed");
+    expect(result.status).toBe("pending_deposit");
     expect(result.id).toBeTruthy();
     expect(result.code).toMatch(/^PON-[A-Z0-9]{6}$/);
-    expect(result.remaining).toBe(26);
 
     const slots = await getLocalAvailability("2099-01-01");
     const slot = slots.find((s) => s.time === "16:00");
-    expect(slot?.booked).toBe(4);
+    // Pending reservations don't hold capacity — only approved
+    // (confirmed) ones do.
+    expect(slot?.booked).toBe(0);
   });
 
-  it("rejects a booking that would exceed slot capacity", async () => {
-    const result = await bookLocalReservation(baseInput({ partySize: 31 }));
-    expect(result.status).toBe("full");
-    expect(result.remaining).toBe(30);
-    expect(result.id).toBeNull();
-  });
-
-  it("fills a slot exactly to capacity across bookings, then rejects the next", async () => {
+  it("rejects a booking that would exceed slot capacity against already-confirmed reservations", async () => {
     const first = await bookLocalReservation(baseInput({ partySize: 30 }));
-    expect(first.status).toBe("confirmed");
-    expect(first.remaining).toBe(0);
+    await approveLocalDeposit(first.code!);
 
     const second = await bookLocalReservation(baseInput({ partySize: 1 }));
     expect(second.status).toBe("full");
@@ -112,7 +107,7 @@ describe("localStore", () => {
       const result = await bookLocalReservation(
         baseInput({ time, partySize: 1 }),
       );
-      expect(result.status).toBe("confirmed");
+      expect(result.status).toBe("pending_deposit");
       expect(codes.has(result.code!)).toBe(false);
       codes.add(result.code!);
     }
@@ -120,7 +115,7 @@ describe("localStore", () => {
   });
 });
 
-describe("deposit", () => {
+describe("deposit amount validation", () => {
   it("rejects a booking whose declared deposit is below what's required", async () => {
     const result = await bookLocalReservation(
       baseInput({ partySize: 2, depositAmount: 59_999 }),
@@ -134,17 +129,10 @@ describe("deposit", () => {
     const result = await bookLocalReservation(
       baseInput({ partySize: 2, depositAmount: 60_000 }),
     );
-    expect(result.status).toBe("confirmed");
+    expect(result.status).toBe("pending_deposit");
   });
 
-  it("accepts a deposit larger than required (e.g. rounded up for a transfer)", async () => {
-    const result = await bookLocalReservation(
-      baseInput({ partySize: 2, depositAmount: 65_000 }),
-    );
-    expect(result.status).toBe("confirmed");
-  });
-
-  it("stores the reported deposit amount and reference, starting unverified", async () => {
+  it("stores the reported deposit amount and reference", async () => {
     const booked = await bookLocalReservation(
       baseInput({
         partySize: 3,
@@ -157,28 +145,96 @@ describe("deposit", () => {
     expect(found?.depositAmount).toBe(90_000);
     expect(found?.depositReference).toBe("DEP-A3F9K2");
     expect(found?.depositVerified).toBe(false);
+    expect(found?.status).toBe("pending_deposit");
   });
+});
 
-  it("lets staff mark a deposit as verified", async () => {
+describe("approveLocalDeposit / rejectLocalDeposit", () => {
+  it("approves a pending deposit, promoting it to confirmed and counting it in availability", async () => {
     const booked = await bookLocalReservation(baseInput());
-    const marked = await markLocalDepositVerified(booked.code!);
-    expect(marked).toBe(true);
+    const result = await approveLocalDeposit(booked.code!);
+    expect(result.status).toBe("confirmed");
+    expect(result.reservation?.status).toBe("confirmed");
+    expect(result.reservation?.depositVerified).toBe(true);
 
-    const found = await getLocalReservationByCode(booked.code!);
-    expect(found?.depositVerified).toBe(true);
+    const slots = await getLocalAvailability("2099-01-01");
+    expect(slots.find((s) => s.time === "16:00")?.booked).toBe(4);
   });
 
-  it("returns false when marking an unknown code as verified", async () => {
-    const marked = await markLocalDepositVerified("PON-ZZZZZZ");
-    expect(marked).toBe(false);
+  it("lists pending deposits and no longer lists one once approved", async () => {
+    const booked = await bookLocalReservation(baseInput());
+    let pending = await getLocalPendingDeposits();
+    expect(pending.map((p) => p.code)).toContain(booked.code);
+
+    await approveLocalDeposit(booked.code!);
+    pending = await getLocalPendingDeposits();
+    expect(pending.map((p) => p.code)).not.toContain(booked.code);
+  });
+
+  it("refuses to approve if the slot filled up in the meantime, leaving it pending", async () => {
+    // Both fit when booked, since neither is confirmed (and thus counted)
+    // yet — pending reservations don't hold capacity.
+    const first = await bookLocalReservation(baseInput({ partySize: 20 }));
+    const second = await bookLocalReservation(baseInput({ partySize: 20 }));
+    expect(first.status).toBe("pending_deposit");
+    expect(second.status).toBe("pending_deposit");
+
+    // Approving the first fills the slot (20/30).
+    await approveLocalDeposit(first.code!);
+
+    // Now approving the second would push it to 40/30 — no longer fits.
+    const result = await approveLocalDeposit(second.code!);
+    expect(result.status).toBe("full");
+
+    const stillPending = await getLocalReservationByCode(second.code!);
+    expect(stillPending?.status).toBe("pending_deposit");
+  });
+
+  it("returns not_found when approving an unknown code", async () => {
+    const result = await approveLocalDeposit("PON-ZZZZZZ");
+    expect(result.status).toBe("not_found");
+  });
+
+  it("returns not_pending when approving an already-confirmed reservation", async () => {
+    const booked = await bookLocalReservation(baseInput());
+    await approveLocalDeposit(booked.code!);
+    const second = await approveLocalDeposit(booked.code!);
+    expect(second.status).toBe("not_pending");
+  });
+
+  it("rejects a pending deposit, cancelling it without affecting capacity", async () => {
+    const booked = await bookLocalReservation(baseInput());
+    const result = await rejectLocalDeposit(booked.code!);
+    expect(result.status).toBe("rejected");
+    expect(result.reservation?.status).toBe("cancelled");
+
+    const stored = await getLocalReservationByCode(booked.code!);
+    expect(stored?.status).toBe("cancelled");
+  });
+
+  it("returns not_found when rejecting an unknown code", async () => {
+    const result = await rejectLocalDeposit("PON-ZZZZZZ");
+    expect(result.status).toBe("not_found");
   });
 });
 
 describe("cancelLocalReservation", () => {
+  it("cancels a pending-deposit reservation regardless of the 2h cutoff (it never held its slot)", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2099, 0, 1, 15, 55)); // 5 min before 16:00
+    const booked = await bookLocalReservation(
+      baseInput({ email: "ana@example.com" }),
+    );
+    const result = await cancelLocalReservation(booked.code!);
+    expect(result.status).toBe("cancelled");
+  });
+
   it("cancels a confirmed reservation (by code) and frees its capacity", async () => {
     const booked = await bookLocalReservation(
       baseInput({ email: "ana@example.com" }),
     );
+    await approveLocalDeposit(booked.code!);
+
     const result = await cancelLocalReservation(booked.code!);
     expect(result).toEqual({
       status: "cancelled",
@@ -187,9 +243,6 @@ describe("cancelLocalReservation", () => {
       date: "2099-01-01",
       time: "16:00",
     });
-
-    const stored = await getLocalReservationByCode(booked.code!);
-    expect(stored?.status).toBe("cancelled");
 
     const slots = await getLocalAvailability("2099-01-01");
     expect(slots.find((s) => s.time === "16:00")?.booked).toBe(0);
@@ -213,10 +266,11 @@ describe("cancelLocalReservation", () => {
     expect(second.status).toBe("already_cancelled");
   });
 
-  it("blocks cancellation inside the 2h cutoff and leaves the reservation confirmed", async () => {
+  it("blocks cancellation of a CONFIRMED reservation inside the 2h cutoff", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2099, 0, 1, 0, 0)); // far before 16:00, booking allowed
     const booked = await bookLocalReservation(baseInput());
+    await approveLocalDeposit(booked.code!);
 
     vi.setSystemTime(new Date(2099, 0, 1, 15, 0)); // 1h before the 16:00 slot
     const result = await cancelLocalReservation(booked.code!);
@@ -239,6 +293,7 @@ describe("cancelLocalReservation", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2099, 0, 1, 0, 0));
     const booked = await bookLocalReservation(baseInput());
+    await approveLocalDeposit(booked.code!);
 
     vi.setSystemTime(new Date(2099, 0, 1, 13, 59));
     const result = await cancelLocalReservation(booked.code!);
@@ -260,10 +315,13 @@ describe("getLocalReservationByCode", () => {
       code: booked.code,
       name: "Ana Torres",
       email: null,
+      phone: null,
       partySize: 4,
       date: "2099-01-01",
       time: "16:00",
-      status: "confirmed",
+      occasion: null,
+      notes: null,
+      status: "pending_deposit",
       depositRequired: 120000,
       depositAmount: 120000,
       depositReference: null,

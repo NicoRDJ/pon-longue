@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { bookReservation, type BookResult } from "@/db/reservationsStore";
 import {
-  sendReservationConfirmation,
-  sendStaffReservationNotification,
+  sendDepositPendingNotice,
+  sendStaffDepositReviewAlert,
 } from "@/lib/email";
 import { STAFF_NOTIFICATION_EMAIL, calculateDeposit } from "@/lib/config";
 
@@ -90,10 +90,11 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!result || result.status !== "confirmed") {
+  // "pending_deposit" is the expected success outcome now — the slot
+  // isn't held/confirmed until staff verifies the deposit on /admin.
+  if (!result || result.status !== "pending_deposit") {
     const reason = result?.status ?? "unknown_error";
-    const statusCode =
-      reason === "full" ? 409 : reason === "deposit_too_low" ? 400 : 400;
+    const statusCode = reason === "full" ? 409 : 400;
     return NextResponse.json(
       {
         error: reason,
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
 
   if (email && result.code) {
     try {
-      await sendReservationConfirmation({
+      await sendDepositPendingNotice({
         to: email,
         code: result.code,
         name,
@@ -116,22 +117,26 @@ export async function POST(req: NextRequest) {
         lang,
       });
     } catch (err) {
-      // The reservation is already confirmed in the database — an email
-      // hiccup shouldn't fail the booking. Log and let the client know via
-      // the response so it can still show a success state.
-      console.error("Failed to send confirmation email:", err);
+      // The reservation is already saved — an email hiccup shouldn't
+      // fail the booking. Log and let the client know via the response
+      // so it can still show a success state.
+      console.error("Failed to send deposit-pending email:", err);
     }
   }
 
-  // Best-effort internal notification — inactive until
-  // STAFF_NOTIFICATION_EMAIL is set (left unset during dev/testing on
-  // purpose, see config.ts). Includes the deposit reference so staff can
-  // find the matching transfer on the bank statement.
-  if (STAFF_NOTIFICATION_EMAIL && result.code) {
+  // Staff needs to know about every pending deposit so they can review
+  // and approve/reject it on /admin. Sent only if STAFF_NOTIFICATION_EMAIL
+  // is set — deliberately NOT falling back to CONTACT_EMAIL, since that
+  // address is wired to Resend's inbound webhook: an automated email
+  // sent there would trigger the webhook on itself and could loop.
+  // Without it configured, the /admin panel (which lists every pending
+  // deposit regardless of email) is the source of truth — staff can
+  // check it directly.
+  if (STAFF_NOTIFICATION_EMAIL) {
     try {
-      await sendStaffReservationNotification({
+      await sendStaffDepositReviewAlert({
         staffEmail: STAFF_NOTIFICATION_EMAIL,
-        code: result.code,
+        code: result.code!,
         name,
         email: email || null,
         phone: phone || null,
@@ -146,15 +151,19 @@ export async function POST(req: NextRequest) {
         depositReference: depositReference || null,
       });
     } catch (err) {
-      console.error("Failed to send staff notification email:", err);
+      console.error("Failed to send staff deposit review alert:", err);
     }
+  } else {
+    console.log(
+      `New pending deposit ${result.code} — set STAFF_NOTIFICATION_EMAIL to get an email alert, or check /admin.`,
+    );
   }
 
   return NextResponse.json(
     {
       id: result.id,
       code: result.code,
-      status: "confirmed",
+      status: "pending_deposit",
       remaining: result.remaining,
       depositRequired,
     },

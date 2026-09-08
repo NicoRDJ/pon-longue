@@ -20,6 +20,13 @@ async function main() {
   await sql.query(functionSql);
   console.log("✓ book_reservation() function installed");
 
+  const depositFunctionsSql = readFileSync(
+    path.join(dir, "sql/approve_reject_deposit.sql"),
+    "utf-8",
+  );
+  await sql.query(depositFunctionsSql);
+  console.log("✓ approve_deposit()/reject_deposit() functions installed");
+
   for (const slot of DEFAULT_SLOTS) {
     await db
       .insert(slotCapacity)

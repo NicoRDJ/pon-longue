@@ -7,16 +7,12 @@ import {
   markWebhookEventProcessed,
 } from "@/lib/webhookDedupe";
 import {
-  sendReservationConfirmation,
+  sendDepositPendingNotice,
   sendEmailParseFailureNotice,
   sendManualReviewAlert,
-  sendStaffReservationNotification,
+  sendStaffDepositReviewAlert,
 } from "@/lib/email";
-import {
-  CONTACT_EMAIL,
-  STAFF_NOTIFICATION_EMAIL,
-  calculateDeposit,
-} from "@/lib/config";
+import { STAFF_NOTIFICATION_EMAIL, calculateDeposit } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +36,22 @@ type ReceivedEmail = {
 function extractEmailAddress(fromHeader: string): string {
   const match = fromHeader.match(/<([^>]+)>/);
   return (match?.[1] ?? fromHeader).trim();
+}
+
+// Best-effort internal alert helper. Deliberately never sends to
+// CONTACT_EMAIL: that address has Resend's inbound receiving configured
+// (it's what triggers THIS webhook), so an automated email sent there
+// would loop back into this same handler. STAFF_NOTIFICATION_EMAIL is a
+// separate real inbox (e.g. a personal Gmail) with no such wiring — if
+// it isn't set, we just log instead of emailing anyone.
+async function alertStaff(fn: (staffEmail: string) => Promise<void>) {
+  if (!STAFF_NOTIFICATION_EMAIL) {
+    console.log(
+      "No STAFF_NOTIFICATION_EMAIL configured — skipping staff email alert (check /admin instead).",
+    );
+    return;
+  }
+  await fn(STAFF_NOTIFICATION_EMAIL);
 }
 
 export async function POST(req: NextRequest) {
@@ -141,9 +153,9 @@ export async function POST(req: NextRequest) {
 
     markWebhookEventProcessed(emailId);
 
-    if (result.status === "confirmed" && result.code) {
+    if (result.status === "pending_deposit" && result.code) {
       try {
-        await sendReservationConfirmation({
+        await sendDepositPendingNotice({
           to: fromAddress,
           code: result.code,
           name: parsed.name,
@@ -153,14 +165,20 @@ export async function POST(req: NextRequest) {
           lang: parsed.lang,
         });
       } catch (err) {
-        console.error("Failed to send confirmation email (inbound flow):", err);
+        console.error(
+          "Failed to send deposit-pending email (inbound flow):",
+          err,
+        );
       }
 
-      if (STAFF_NOTIFICATION_EMAIL) {
-        try {
-          await sendStaffReservationNotification({
-            staffEmail: STAFF_NOTIFICATION_EMAIL,
-            code: result.code,
+      // Every pending deposit needs a human to review it on /admin —
+      // unlike the general notification, this always tries to alert
+      // staff (subject to alertStaff()'s loop-avoidance guard above).
+      try {
+        await alertStaff((staffEmail) =>
+          sendStaffDepositReviewAlert({
+            staffEmail,
+            code: result.code!,
             name: parsed.name,
             email: fromAddress,
             phone: null,
@@ -173,10 +191,10 @@ export async function POST(req: NextRequest) {
             depositRequired,
             depositAmount,
             depositReference: parsed.depositReference,
-          });
-        } catch (err) {
-          console.error("Failed to send staff notification email:", err);
-        }
+          }),
+        );
+      } catch (err) {
+        console.error("Failed to send staff deposit review alert:", err);
       }
     } else {
       // Most commonly "full" (that time just filled up) — could also be
@@ -188,12 +206,14 @@ export async function POST(req: NextRequest) {
           to: fromAddress,
           lang: parsed.lang,
         });
-        await sendManualReviewAlert({
-          staffEmail: CONTACT_EMAIL,
-          fromAddress,
-          subject,
-          rawText: `[Solicitud de reserva por correo — resultado: ${result.status}]\n\n${bodyText}`,
-        });
+        await alertStaff((staffEmail) =>
+          sendManualReviewAlert({
+            staffEmail,
+            fromAddress,
+            subject,
+            rawText: `[Solicitud de reserva por correo — resultado: ${result.status}]\n\n${bodyText}`,
+          }),
+        );
       } catch (err) {
         console.error("Failed to send booking follow-up emails:", err);
       }
@@ -209,12 +229,14 @@ export async function POST(req: NextRequest) {
   markWebhookEventProcessed(emailId);
   try {
     await sendEmailParseFailureNotice({ to: fromAddress, lang: "es" });
-    await sendManualReviewAlert({
-      staffEmail: CONTACT_EMAIL,
-      fromAddress,
-      subject,
-      rawText: bodyText,
-    });
+    await alertStaff((staffEmail) =>
+      sendManualReviewAlert({
+        staffEmail,
+        fromAddress,
+        subject,
+        rawText: bodyText,
+      }),
+    );
   } catch (err) {
     console.error("Failed to send manual-review emails:", err);
   }

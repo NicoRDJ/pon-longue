@@ -7,6 +7,14 @@
 // server restarts. Writes are best-effort: on a read-only filesystem (e.g.
 // a serverless cold start) they're caught and the store keeps working
 // in-memory for the lifetime of that instance instead of crashing.
+//
+// Deposit verification flow: there's no payment gateway wired up yet, so
+// a reservation with a reported deposit starts as "pending_deposit" — it
+// does NOT count against slot capacity while pending, so it can't block
+// other customers from booking that same time. Staff reviews it on the
+// /admin panel and either approves it (re-checking capacity at that
+// moment, since it wasn't held) or rejects it. Only "confirmed"
+// reservations count toward capacity.
 
 import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,7 +22,7 @@ import path from "node:path";
 import { DEFAULT_SLOTS } from "@/lib/hours";
 import { isPastCancellationCutoff } from "@/lib/reservation";
 
-type ReservationStatus = "confirmed" | "cancelled";
+type ReservationStatus = "confirmed" | "pending_deposit" | "cancelled";
 
 type LocalReservation = {
   id: string;
@@ -47,6 +55,7 @@ export type BookResult = {
   code: string | null;
   status:
     | "confirmed"
+    | "pending_deposit"
     | "full"
     | "unknown_slot"
     | "invalid_party_size"
@@ -60,9 +69,12 @@ export type ReservationSummary = {
   code: string;
   name: string;
   email: string | null;
+  phone: string | null;
   partySize: number;
   date: string;
   time: string;
+  occasion: string | null;
+  notes: string | null;
   status: ReservationStatus;
   depositRequired: number;
   depositAmount: number;
@@ -78,6 +90,16 @@ export type CancelResult = {
   time?: string;
 };
 
+export type ApproveDepositResult = {
+  status: "confirmed" | "not_found" | "not_pending" | "full";
+  reservation?: ReservationSummary;
+};
+
+export type RejectDepositResult = {
+  status: "rejected" | "not_found" | "not_pending";
+  reservation?: ReservationSummary;
+};
+
 const DATA_FILE = path.join(process.cwd(), ".data", "local-reservations.json");
 
 let persistenceWarned = false;
@@ -87,9 +109,6 @@ function defaultData(): StoreData {
 }
 
 // Generates a short, human-typeable confirmation code like "PON-A3F9K2".
-// This is the identifier customers actually use — typed into the
-// "cancelar" lookup form, or embedded in the emailed cancel link
-// (/cancelar/<code>) so clicking it goes straight there too.
 function generateCodeCandidate(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
   let code = "";
@@ -123,12 +142,10 @@ function generateConfirmationCode(data: StoreData): string {
 }
 
 // No in-memory cache between calls — always read the file fresh and
-// write it back immediately. At this venue's scale (a handful of
-// reservations at a time, not high-frequency traffic) the extra disk
+// write it back immediately. At this venue's scale the extra disk
 // read/write per request is free, and it rules out an entire class of
-// staleness bugs: two route handlers (or two module instances, which can
-// happen under dev hot-reload/Turbopack) ending up with different
-// snapshots in memory until the server restarts.
+// staleness bugs from two route handlers (or two module instances under
+// dev hot-reload) working from different in-memory snapshots.
 function load(): StoreData {
   try {
     const raw = readFileSync(DATA_FILE, "utf-8");
@@ -183,6 +200,41 @@ async function withSlotLock<T>(
   }
 }
 
+function confirmedBookedCount(
+  data: StoreData,
+  date: string,
+  time: string,
+): number {
+  return data.reservations
+    .filter(
+      (r) =>
+        r.reservationDate === date &&
+        r.reservationTime === time &&
+        r.status === "confirmed",
+    )
+    .reduce((sum, r) => sum + r.partySize, 0);
+}
+
+function toSummary(r: LocalReservation): ReservationSummary {
+  return {
+    id: r.id,
+    code: r.confirmationCode,
+    name: r.name,
+    email: r.email,
+    phone: r.phone,
+    partySize: r.partySize,
+    date: r.reservationDate,
+    time: r.reservationTime,
+    occasion: r.occasion,
+    notes: r.notes,
+    status: r.status,
+    depositRequired: r.depositRequired,
+    depositAmount: r.depositAmount,
+    depositReference: r.depositReference,
+    depositVerified: r.depositVerified,
+  };
+}
+
 export async function getLocalAvailability(
   date: string,
 ): Promise<{ time: string; capacity: number; booked: number }[]> {
@@ -190,17 +242,11 @@ export async function getLocalAvailability(
   return data.slots
     .slice()
     .sort((a, b) => a.slotTime.localeCompare(b.slotTime))
-    .map((slot) => {
-      const booked = data.reservations
-        .filter(
-          (r) =>
-            r.reservationDate === date &&
-            r.reservationTime === slot.slotTime &&
-            r.status === "confirmed",
-        )
-        .reduce((sum, r) => sum + r.partySize, 0);
-      return { time: slot.slotTime, capacity: slot.capacity, booked };
-    });
+    .map((slot) => ({
+      time: slot.slotTime,
+      capacity: slot.capacity,
+      booked: confirmedBookedCount(data, date, slot.slotTime),
+    }));
 }
 
 export async function bookLocalReservation(input: {
@@ -249,14 +295,7 @@ export async function bookLocalReservation(input: {
       };
     }
 
-    const booked = data.reservations
-      .filter(
-        (r) =>
-          r.reservationDate === input.date &&
-          r.reservationTime === input.time &&
-          r.status === "confirmed",
-      )
-      .reduce((sum, r) => sum + r.partySize, 0);
+    const booked = confirmedBookedCount(data, input.date, input.time);
 
     if (booked + input.partySize > slot.capacity) {
       return {
@@ -268,6 +307,8 @@ export async function bookLocalReservation(input: {
       };
     }
 
+    // Not held/counted until staff verifies the deposit — see the
+    // module-level comment for why.
     const reservation: LocalReservation = {
       id: randomUUID(),
       confirmationCode: generateConfirmationCode(data),
@@ -279,7 +320,7 @@ export async function bookLocalReservation(input: {
       reservationTime: input.time,
       occasion: input.occasion,
       notes: input.notes,
-      status: "confirmed",
+      status: "pending_deposit",
       depositRequired: input.depositRequired,
       depositAmount: input.depositAmount,
       depositReference: input.depositReference,
@@ -292,8 +333,8 @@ export async function bookLocalReservation(input: {
     return {
       id: reservation.id,
       code: reservation.confirmationCode,
-      status: "confirmed",
-      remaining: Math.max(slot.capacity - booked - input.partySize, 0),
+      status: "pending_deposit",
+      remaining: Math.max(slot.capacity - booked, 0),
       depositRequired: input.depositRequired,
     };
   });
@@ -307,21 +348,7 @@ export async function getLocalReservationByCode(
   const r = data.reservations.find(
     (res) => res.confirmationCode.toUpperCase() === normalized,
   );
-  if (!r) return null;
-  return {
-    id: r.id,
-    code: r.confirmationCode,
-    name: r.name,
-    email: r.email,
-    partySize: r.partySize,
-    date: r.reservationDate,
-    time: r.reservationTime,
-    status: r.status,
-    depositRequired: r.depositRequired,
-    depositAmount: r.depositAmount,
-    depositReference: r.depositReference,
-    depositVerified: r.depositVerified,
-  };
+  return r ? toSummary(r) : null;
 }
 
 export async function cancelLocalReservation(
@@ -343,7 +370,13 @@ export async function cancelLocalReservation(
         time: r.reservationTime,
       };
     }
-    if (isPastCancellationCutoff(r.reservationDate, r.reservationTime)) {
+    // Pending-deposit reservations never held capacity, so cancelling
+    // one is always allowed regardless of the 2h cutoff — there's
+    // nothing to "free up".
+    if (
+      r.status === "confirmed" &&
+      isPastCancellationCutoff(r.reservationDate, r.reservationTime)
+    ) {
       return {
         status: "too_late",
         name: r.name,
@@ -365,20 +398,69 @@ export async function cancelLocalReservation(
   });
 }
 
-// Marks a reservation's deposit as manually verified by staff, once they
-// confirm the transfer against the bank statement using the deposit
-// reference. Not wired up to any UI yet (no admin panel exists) — call
-// it from a one-off script for now.
-export async function markLocalDepositVerified(code: string): Promise<boolean> {
+// --- Staff deposit review (/admin panel) ---
+
+export async function getLocalPendingDeposits(): Promise<ReservationSummary[]> {
   const data = load();
+  return data.reservations
+    .filter((r) => r.status === "pending_deposit")
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map(toSummary);
+}
+
+// Approves a pending deposit, promoting the reservation to "confirmed".
+// Capacity is re-checked HERE (not at request time) since a pending
+// reservation never held its slot — someone else may have booked it in
+// the meantime. If it no longer fits, the reservation is left pending so
+// staff can decide (contact the customer, offer another time, etc.)
+// rather than silently cancelling it.
+export async function approveLocalDeposit(
+  code: string,
+): Promise<ApproveDepositResult> {
   const normalized = code.trim().toUpperCase();
-  const r = data.reservations.find(
-    (res) => res.confirmationCode.toUpperCase() === normalized,
-  );
-  if (!r) return false;
-  r.depositVerified = true;
-  persist(data);
-  return true;
+  return withSlotLock(`approve|${normalized}`, () => {
+    const data = load();
+    const r = data.reservations.find(
+      (res) => res.confirmationCode.toUpperCase() === normalized,
+    );
+    if (!r) return { status: "not_found" };
+    if (r.status !== "pending_deposit") return { status: "not_pending" };
+
+    const slot = data.slots.find((s) => s.slotTime === r.reservationTime);
+    const capacity = slot?.capacity ?? 0;
+    const booked = confirmedBookedCount(
+      data,
+      r.reservationDate,
+      r.reservationTime,
+    );
+
+    if (booked + r.partySize > capacity) {
+      return { status: "full", reservation: toSummary(r) };
+    }
+
+    r.status = "confirmed";
+    r.depositVerified = true;
+    persist(data);
+    return { status: "confirmed", reservation: toSummary(r) };
+  });
+}
+
+export async function rejectLocalDeposit(
+  code: string,
+): Promise<RejectDepositResult> {
+  const normalized = code.trim().toUpperCase();
+  return withSlotLock(`reject|${normalized}`, () => {
+    const data = load();
+    const r = data.reservations.find(
+      (res) => res.confirmationCode.toUpperCase() === normalized,
+    );
+    if (!r) return { status: "not_found" };
+    if (r.status !== "pending_deposit") return { status: "not_pending" };
+
+    r.status = "cancelled";
+    persist(data);
+    return { status: "rejected", reservation: toSummary(r) };
+  });
 }
 
 // Test-only: kept as a no-op for compatibility with existing test files —

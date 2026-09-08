@@ -190,6 +190,34 @@ export default function ReservationWizard() {
   const [bookingState, setBookingState] = useState<BookingState>("idle");
   const [reservationCode, setReservationCode] = useState<string | null>(null);
 
+  // Once the customer triggers "reservar por correo", we lock the rest of
+  // the form for this browser session — without this, they could also
+  // hit the automatic "Confirmar reserva" button (or send another email)
+  // and end up with two reservations for the same request. Persisted in
+  // sessionStorage so a page refresh doesn't quietly undo the lock, but a
+  // closed tab/new session does — matching "same session" rather than
+  // "forever".
+  const EMAIL_LOCK_KEY = "pon_email_reservation_started";
+  const [emailReservationLocked, setEmailReservationLocked] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.sessionStorage.getItem(EMAIL_LOCK_KEY) === "1",
+  );
+
+  function lockAfterEmailReservation() {
+    setEmailReservationLocked(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(EMAIL_LOCK_KEY, "1");
+    }
+  }
+
+  function unlockEmailReservation() {
+    setEmailReservationLocked(false);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(EMAIL_LOCK_KEY);
+    }
+  }
+
   const depositRequired = useMemo(() => calculateDeposit(people), [people]);
   const [depositAmountOverride, setDepositAmountOverride] = useState<
     number | null
@@ -200,6 +228,12 @@ export default function ReservationWizard() {
   // customer references the same code throughout — including if they
   // switch between the automatic and email paths.
   const [depositReference] = useState<string>(() => generateDepositReference());
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptUploaded, setReceiptUploaded] = useState(false);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(
+    null,
+  );
+  const [receiptError, setReceiptError] = useState<string | null>(null);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -332,6 +366,10 @@ export default function ReservationWizard() {
       setDepositError(t("reserve.depositTooLow"));
       return;
     }
+    if (!receiptUploaded) {
+      setDepositError(t("reserve.receiptRequired"));
+      return;
+    }
     setDepositError(null);
 
     setBookingState("submitting");
@@ -383,9 +421,72 @@ export default function ReservationWizard() {
     }
   }
 
+  const ACCEPTED_RECEIPT_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MAX_RECEIPT_MB = 4;
+
+  async function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setReceiptError(null);
+
+    if (!ACCEPTED_RECEIPT_TYPES.includes(file.type)) {
+      setReceiptError(t("reserve.receiptInvalidType"));
+      return;
+    }
+    if (file.size > MAX_RECEIPT_MB * 1024 * 1024) {
+      setReceiptError(t("reserve.receiptTooLarge"));
+      return;
+    }
+
+    setReceiptUploading(true);
+    setReceiptUploaded(false);
+
+    try {
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Strip the "data:image/...;base64," prefix — the server only
+          // wants the raw base64 payload.
+          resolve(result.split(",")[1] ?? "");
+        };
+        reader.onerror = () => reject(new Error("read_failed"));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch("/api/deposit-receipts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          depositReference,
+          mimeType: file.type,
+          base64Data,
+        }),
+      });
+
+      if (!res.ok) {
+        setReceiptError(t("reserve.receiptUploadFailed"));
+        setReceiptUploading(false);
+        return;
+      }
+
+      setReceiptPreviewUrl(URL.createObjectURL(file));
+      setReceiptUploaded(true);
+    } catch {
+      setReceiptError(t("reserve.receiptUploadFailed"));
+    } finally {
+      setReceiptUploading(false);
+    }
+  }
+
   function contactManually() {
     if (channel === "email" && depositAmount < depositRequired) {
       setDepositError(t("reserve.depositTooLow"));
+      return;
+    }
+    if (channel === "email" && !receiptUploaded) {
+      setDepositError(t("reserve.receiptRequired"));
       return;
     }
     setDepositError(null);
@@ -407,6 +508,7 @@ export default function ReservationWizard() {
       const subject =
         lang === "es" ? "Reserva PON Lounge" : "PON Lounge reservation";
       window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+      lockAfterEmailReservation();
     } else {
       window.open(
         `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`,
@@ -422,6 +524,46 @@ export default function ReservationWizard() {
       : channel === "email"
         ? "reserve.submitEmail"
         : "reserve.submitWhatsapp";
+
+  if (emailReservationLocked) {
+    return (
+      <section
+        id="reservas"
+        className="bg-obsidian relative overflow-hidden px-6 py-24"
+      >
+        <ParallaxImage
+          src="/photos/coctel-de-autor.png"
+          alt=""
+          className="absolute inset-0 opacity-30"
+          strength={16}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(11,13,16,0.6), rgba(11,13,16,0.92))",
+          }}
+        />
+        <div className="relative mx-auto max-w-xl">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+            <p className="text-brass mb-3 text-[11px] font-bold tracking-[0.1em] uppercase">
+              {t("reserve.emailLockTitle")}
+            </p>
+            <p className="text-cream-muted text-sm">
+              {t("reserve.emailLockBody")}
+            </p>
+            <button
+              type="button"
+              onClick={unlockEmailReservation}
+              className="text-brass-light mt-5 text-[13px] underline underline-offset-2"
+            >
+              {t("reserve.emailLockReset")}
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -892,6 +1034,45 @@ export default function ReservationWizard() {
                             {depositError}
                           </p>
                         )}
+
+                        <div className="mt-4">
+                          <label
+                            htmlFor="deposit-receipt"
+                            className="text-cream-muted mb-1.5 block text-xs tracking-[0.06em] uppercase"
+                          >
+                            {t("reserve.receiptLabel")}
+                          </label>
+                          <input
+                            id="deposit-receipt"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleReceiptChange}
+                            className="text-cream-muted file:border-brass/35 file:text-brass-light w-full text-[13px] file:mr-3 file:rounded-full file:border file:bg-transparent file:px-4 file:py-2 file:text-xs file:font-semibold"
+                          />
+                          {receiptUploading && (
+                            <p className="text-cream-muted mt-2 text-[12px]">
+                              {t("reserve.receiptUploading")}
+                            </p>
+                          )}
+                          {receiptUploaded && receiptPreviewUrl && (
+                            <div className="mt-3 flex items-center gap-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a static asset */}
+                              <img
+                                src={receiptPreviewUrl}
+                                alt=""
+                                className="h-14 w-14 rounded-lg object-cover"
+                              />
+                              <p className="text-[12px] text-[#8fd6ab]">
+                                {t("reserve.receiptUploaded")}
+                              </p>
+                            </div>
+                          )}
+                          {receiptError && (
+                            <p className="mt-2 text-[12px] text-[#e08a8a]">
+                              {receiptError}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -900,7 +1081,9 @@ export default function ReservationWizard() {
                         <button
                           type="button"
                           onClick={confirmAutomatically}
-                          disabled={bookingState === "submitting"}
+                          disabled={
+                            bookingState === "submitting" || !receiptUploaded
+                          }
                           className="from-brass-light to-brass text-obsidian flex w-full justify-center rounded-full bg-gradient-to-br px-6.5 py-3.5 text-sm font-semibold disabled:opacity-60"
                         >
                           {bookingState === "submitting"
@@ -972,14 +1155,20 @@ export default function ReservationWizard() {
                       <button
                         type="button"
                         onClick={contactManually}
+                        disabled={channel === "email" && !receiptUploaded}
                         className={
                           liveMode
-                            ? "border-cream text-cream hover:border-brass flex w-full justify-center rounded-full border px-6.5 py-3 text-sm font-semibold"
-                            : "from-brass-light to-brass text-obsidian flex w-full justify-center rounded-full bg-gradient-to-br px-6.5 py-3.5 text-sm font-semibold"
+                            ? "border-cream text-cream hover:border-brass flex w-full justify-center rounded-full border px-6.5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                            : "from-brass-light to-brass text-obsidian flex w-full justify-center rounded-full bg-gradient-to-br px-6.5 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                         }
                       >
                         {t(manualLabelKey)}
                       </button>
+                      {channel === "email" && !receiptUploaded && (
+                        <p className="text-cream-muted mt-2 text-center text-[12px]">
+                          {t("reserve.receiptRequiredHint")}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}

@@ -1,4 +1,5 @@
-// Single entry point the API routes use for availability + booking.
+// Single entry point the API routes use for availability + booking +
+// deposit review.
 //
 // Picks a backend automatically: real Postgres (Neon) when DATABASE_URL /
 // POSTGRES_URL is set, otherwise the local JSON-file-simulated database in
@@ -15,9 +16,14 @@ import {
   bookLocalReservation,
   getLocalReservationByCode,
   cancelLocalReservation,
+  getLocalPendingDeposits,
+  approveLocalDeposit,
+  rejectLocalDeposit,
   type BookResult,
   type ReservationSummary,
   type CancelResult,
+  type ApproveDepositResult,
+  type RejectDepositResult,
 } from "@/db/localStore";
 
 export type AvailabilitySlot = {
@@ -25,10 +31,36 @@ export type AvailabilitySlot = {
   capacity: number;
   booked: number;
 };
-export type { BookResult, ReservationSummary, CancelResult };
+export type {
+  BookResult,
+  ReservationSummary,
+  CancelResult,
+  ApproveDepositResult,
+  RejectDepositResult,
+};
 
 function hasRemoteDatabase(): boolean {
   return Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+}
+
+function rowToSummary(r: typeof reservations.$inferSelect): ReservationSummary {
+  return {
+    id: r.id,
+    code: r.confirmationCode,
+    name: r.name,
+    email: r.email,
+    phone: r.phone,
+    partySize: r.partySize,
+    date: r.reservationDate,
+    time: r.reservationTime.slice(0, 5),
+    occasion: r.occasion,
+    notes: r.notes,
+    status: r.status,
+    depositRequired: r.depositRequired,
+    depositAmount: r.depositAmount,
+    depositReference: r.depositReference,
+    depositVerified: r.depositVerified,
+  };
 }
 
 export async function getAvailability(
@@ -119,22 +151,7 @@ export async function getReservationByCode(
     .where(eq(reservations.confirmationCode, code.trim().toUpperCase()))
     .limit(1);
   const r = rows[0];
-  if (!r) return null;
-
-  return {
-    id: r.id,
-    code: r.confirmationCode,
-    name: r.name,
-    email: r.email,
-    partySize: r.partySize,
-    date: r.reservationDate,
-    time: r.reservationTime.slice(0, 5),
-    status: r.status,
-    depositRequired: r.depositRequired,
-    depositAmount: r.depositAmount,
-    depositReference: r.depositReference,
-    depositVerified: r.depositVerified,
-  };
+  return r ? rowToSummary(r) : null;
 }
 
 export async function cancelReservation(code: string): Promise<CancelResult> {
@@ -160,20 +177,17 @@ export async function cancelReservation(code: string): Promise<CancelResult> {
   if (existing.status === "cancelled") {
     return { status: "already_cancelled", name, email, date, time };
   }
-  if (isPastCancellationCutoff(date, time)) {
+  if (existing.status === "confirmed" && isPastCancellationCutoff(date, time)) {
     return { status: "too_late", name, email, date, time };
   }
 
-  // Conditional on status='confirmed' so a concurrent cancel of the same
-  // reservation can't both "succeed" — mirrors the advisory-lock care
-  // book_reservation() takes for the booking side.
   const updated = await db
     .update(reservations)
     .set({ status: "cancelled" })
     .where(
       and(
         eq(reservations.confirmationCode, normalizedCode),
-        eq(reservations.status, "confirmed"),
+        eq(reservations.status, existing.status),
       ),
     )
     .returning({ id: reservations.id });
@@ -183,4 +197,78 @@ export async function cancelReservation(code: string): Promise<CancelResult> {
   }
 
   return { status: "cancelled", name, email, date, time };
+}
+
+// --- Staff deposit review (/admin panel) ---
+
+export async function getPendingDeposits(): Promise<ReservationSummary[]> {
+  if (!hasRemoteDatabase()) {
+    return getLocalPendingDeposits();
+  }
+
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(reservations)
+    .where(eq(reservations.status, "pending_deposit"))
+    .orderBy(reservations.createdAt);
+
+  return rows.map(rowToSummary);
+}
+
+export async function approveDeposit(
+  code: string,
+): Promise<ApproveDepositResult> {
+  if (!hasRemoteDatabase()) {
+    return approveLocalDeposit(code);
+  }
+
+  const normalizedCode = code.trim().toUpperCase();
+  const sql = getSql();
+  const rows =
+    (await sql`select * from approve_deposit(${normalizedCode})`) as {
+      status: ApproveDepositResult["status"];
+    }[];
+  const status = rows[0]?.status ?? "not_found";
+
+  if (status !== "confirmed") {
+    const rows2 = await getDb()
+      .select()
+      .from(reservations)
+      .where(eq(reservations.confirmationCode, normalizedCode))
+      .limit(1);
+    const r = rows2[0];
+    return { status, reservation: r ? rowToSummary(r) : undefined };
+  }
+
+  const rows2 = await getDb()
+    .select()
+    .from(reservations)
+    .where(eq(reservations.confirmationCode, normalizedCode))
+    .limit(1);
+  const r = rows2[0];
+  return { status: "confirmed", reservation: r ? rowToSummary(r) : undefined };
+}
+
+export async function rejectDeposit(
+  code: string,
+): Promise<RejectDepositResult> {
+  if (!hasRemoteDatabase()) {
+    return rejectLocalDeposit(code);
+  }
+
+  const normalizedCode = code.trim().toUpperCase();
+  const sql = getSql();
+  const rows = (await sql`select * from reject_deposit(${normalizedCode})`) as {
+    status: RejectDepositResult["status"];
+  }[];
+  const status = rows[0]?.status ?? "not_found";
+
+  const rows2 = await getDb()
+    .select()
+    .from(reservations)
+    .where(eq(reservations.confirmationCode, normalizedCode))
+    .limit(1);
+  const r = rows2[0];
+  return { status, reservation: r ? rowToSummary(r) : undefined };
 }

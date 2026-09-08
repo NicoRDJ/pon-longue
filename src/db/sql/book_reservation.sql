@@ -2,13 +2,13 @@
 -- reservation in the same statement, so two concurrent requests for the
 -- last open spot can't both succeed (classic check-then-insert race).
 --
--- Deposit: there's no payment gateway wired up yet. p_deposit_required is
--- computed by the app (party_size * price per guest) and p_deposit_amount
--- is what the customer says they transferred — rejected here if it's
--- less than what's required. p_deposit_reference is a short code the
--- customer put in the bank transfer's description so staff can find it
--- on the statement. deposit_verified starts false; staff flips it
--- manually once they confirm the transfer.
+-- Deposit verification flow: there's no payment gateway wired up yet.
+-- p_deposit_required is computed by the app (party_size * price per
+-- guest) and p_deposit_amount is what the customer says they
+-- transferred — rejected here if it's less than what's required.
+-- Otherwise the reservation is inserted as 'pending_deposit' and does
+-- NOT count against capacity (only 'confirmed' rows do) until staff
+-- approves it via approve_deposit() below.
 --
 -- pg_advisory_xact_lock serializes concurrent calls for the *same*
 -- date+time slot (the lock key is derived from them) without blocking
@@ -77,10 +77,10 @@ begin
      occasion, notes, status, deposit_required, deposit_amount, deposit_reference, deposit_verified)
   values
     (v_code, p_name, p_email, p_phone, p_party_size, p_date, p_time, p_occasion, p_notes,
-     'confirmed', p_deposit_required, p_deposit_amount, p_deposit_reference, false)
+     'pending_deposit', p_deposit_required, p_deposit_amount, p_deposit_reference, false)
   returning reservations.id into v_new_id;
 
   return query
-    select v_new_id, v_code, 'confirmed'::text, greatest(v_capacity - v_booked - p_party_size, 0), p_deposit_required;
+    select v_new_id, v_code, 'pending_deposit'::text, greatest(v_capacity - v_booked, 0), p_deposit_required;
 end;
 $$ language plpgsql;

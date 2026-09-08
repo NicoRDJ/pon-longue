@@ -148,9 +148,9 @@ export const dictionaries = {
     "reserve.icsLocation": "PON Lounge, Medellín",
     "reserve.confirmAuto": "Confirmar reserva",
     "reserve.confirming": "Confirmando…",
-    "reserve.confirmedTitle": "¡Reserva confirmada!",
+    "reserve.confirmedTitle": "¡Solicitud recibida!",
     "reserve.confirmedBody":
-      "Te esperamos. Si nos diste tu correo, ya te enviamos los detalles.",
+      "Estamos verificando tu depósito. En cuanto lo confirmemos, te llega un correo con tu reserva ya lista.",
     "reserve.codeLabel": "Código de reserva",
     "reserve.codeNote":
       "Guarda este código: lo necesitas para cancelar tu reserva si no puedes venir.",
@@ -164,6 +164,21 @@ export const dictionaries = {
     "reserve.depositAmountLabel": "Valor que transferiste (COP)",
     "reserve.depositTooLow":
       "El depósito mínimo requerido no se ha completado. Verifica el valor antes de confirmar.",
+    "reserve.receiptLabel": "Captura del comprobante de transferencia",
+    "reserve.receiptRequired":
+      "Adjunta la captura de tu comprobante de transferencia para poder confirmar.",
+    "reserve.receiptRequiredHint":
+      "Adjunta la captura de tu comprobante arriba para poder continuar.",
+    "reserve.receiptUploading": "Subiendo comprobante…",
+    "reserve.receiptUploaded": "Comprobante recibido.",
+    "reserve.receiptInvalidType": "Solo se aceptan imágenes JPG, PNG o WEBP.",
+    "reserve.receiptTooLarge": "La imagen es muy pesada (máximo 4MB).",
+    "reserve.receiptUploadFailed":
+      "No pudimos subir el comprobante. Intenta de nuevo.",
+    "reserve.emailLockTitle": "Ya enviaste tu solicitud por correo",
+    "reserve.emailLockBody":
+      "Revisa tu bandeja de entrada: te llegará la confirmación en cuanto verifiquemos tu depósito. Para evitar reservas duplicadas, no puedes hacer otra reserva desde esta página por ahora.",
+    "reserve.emailLockReset": "Fue un error, quiero reservar de otra forma",
     "reserve.errorFull":
       "Ese horario se acaba de llenar. Elige otra hora disponible.",
     "reserve.errorGeneric":
@@ -391,9 +406,9 @@ export const dictionaries = {
     "reserve.icsLocation": "PON Lounge, Medellín",
     "reserve.confirmAuto": "Confirm reservation",
     "reserve.confirming": "Confirming…",
-    "reserve.confirmedTitle": "Reservation confirmed!",
+    "reserve.confirmedTitle": "Request received!",
     "reserve.confirmedBody":
-      "We'll see you then. If you gave us your email, we've already sent the details.",
+      "We're verifying your deposit. Once confirmed, you'll get an email with your reservation all set.",
     "reserve.codeLabel": "Confirmation code",
     "reserve.codeNote":
       "Keep this code: you'll need it to cancel your reservation if you can't make it.",
@@ -406,6 +421,21 @@ export const dictionaries = {
     "reserve.depositAmountLabel": "Amount you transferred (COP)",
     "reserve.depositTooLow":
       "The minimum required deposit hasn't been met. Check the amount before confirming.",
+    "reserve.receiptLabel": "Transfer receipt screenshot",
+    "reserve.receiptRequired":
+      "Attach a screenshot of your transfer receipt to confirm.",
+    "reserve.receiptRequiredHint":
+      "Attach your receipt screenshot above to continue.",
+    "reserve.receiptUploading": "Uploading receipt…",
+    "reserve.receiptUploaded": "Receipt received.",
+    "reserve.receiptInvalidType": "Only JPG, PNG, or WEBP images are accepted.",
+    "reserve.receiptTooLarge": "The image is too large (4MB max).",
+    "reserve.receiptUploadFailed":
+      "We couldn't upload the receipt. Please try again.",
+    "reserve.emailLockTitle": "You've already sent your email request",
+    "reserve.emailLockBody":
+      "Check your inbox — you'll get a confirmation once we verify your deposit. To avoid duplicate reservations, you can't submit another one from this page for now.",
+    "reserve.emailLockReset": "That was a mistake, let me book another way",
     "reserve.errorFull":
       "That time just filled up. Please choose another available slot.",
     "reserve.errorGeneric":
