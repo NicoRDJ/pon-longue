@@ -288,8 +288,8 @@ export const cocktailMenu: MenuCategory[] = [
         price: 46000,
       },
       {
-        name_es: "Tamarindón Splash",
-        name_en: "Tamarindón Splash",
+        name_es: "Tamarindo Splash",
+        name_en: "Tamarindo Splash",
         desc_es:
           "Trago tropical de tamarindo con un splash refrescante — dulce, ácido y con carácter.",
         desc_en:
