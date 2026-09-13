@@ -3,7 +3,8 @@ export interface MenuItem {
   name_en: string;
   desc_es: string;
   desc_en: string;
-  // Optional: cocktail prices are still being confirmed with the owner.
+  // Optional: absent while a price is still pending confirmation with the
+  // owner — MenuAccordion simply omits the price badge until it's set.
   price?: number;
   // Optional: path under /public once a real photo exists for this item
   // (e.g. "/carta/dama-de-pon.jpg"). Until then, MenuAccordion/MenuTeaser
@@ -41,6 +42,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Licor de almendras con una suavidad aromática y una elegancia que se queda. Un cierre especiado que invita a quedarse una copa más.",
         desc_en:
           "Almond liqueur with an aromatic softness and a lingering elegance. A spiced finish that invites one more glass.",
+        price: 52000,
       },
       {
         name_es: "Pacífico Sour",
@@ -49,6 +51,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Viche del Pacífico colombiano convertido en un homenaje líquido: carácter, historia y espuma sedosa en cada sorbo.",
         desc_en:
           "Viche from Colombia's Pacific coast turned into a liquid tribute: character, history, and silky foam in every sip.",
+        price: 42000,
       },
       {
         name_es: "Viche Tónic",
@@ -57,6 +60,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Viche herbal y fresco, con alma ancestral — el Pacífico colombiano sentido en una copa.",
         desc_en:
           "Herbal, fresh viche with an ancestral soul — Colombia's Pacific coast, felt in a glass.",
+        price: 42000,
       },
       {
         name_es: "Viche Colada",
@@ -65,6 +69,16 @@ export const cocktailMenu: MenuCategory[] = [
           "Viche envuelto en dulzura tropical. Como una tarde de playa condensada en un solo trago.",
         desc_en:
           "Viche wrapped in tropical sweetness. Like a beach afternoon condensed into one drink.",
+        price: 46000,
+      },
+      {
+        name_es: "Black Lounge",
+        name_en: "Black Lounge",
+        desc_es:
+          "El trago insignia de la casa en su versión más oscura y envolvente — carácter puro de PON Lounge.",
+        desc_en:
+          "The house's signature drink in its darkest, most immersive form — pure PON Lounge character.",
+        price: 45000,
       },
     ],
   },
@@ -80,6 +94,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Gin amargo, intenso y sin concesiones. Para quienes ya saben exactamente lo que quieren.",
         desc_en:
           "Bitter, intense gin with no compromises. For those who already know exactly what they want.",
+        price: 49000,
       },
       {
         name_es: "Old Fashioned",
@@ -88,6 +103,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Bourbon, tiempo y un toque de humo. El clásico que nunca pasa de moda.",
         desc_en:
           "Bourbon, time, and a touch of smoke. The classic that never goes out of style.",
+        price: 49000,
       },
       {
         name_es: "Mezcalita",
@@ -96,6 +112,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Mezcal ahumado y con carácter — para quienes buscan algo con más profundidad.",
         desc_en:
           "Smoky mezcal with character — for those looking for something with more depth.",
+        price: 52000,
       },
       {
         name_es: "Dry Martini",
@@ -104,6 +121,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Gin frío, directo y elegante. Sofisticación en su forma más pura.",
         desc_en:
           "Cold, direct, elegant gin. Sophistication in its purest form.",
+        price: 49000,
       },
       {
         name_es: "Manhattan",
@@ -112,6 +130,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Whisky aterciopelado y con carácter, para las noches que se disfrutan despacio.",
         desc_en:
           "Velvety whiskey with character, for nights meant to be savored slowly.",
+        price: 49000,
       },
       {
         name_es: "Espresso Martini",
@@ -120,6 +139,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Vodka con energía y elegancia en una sola copa — el impulso perfecto para que la noche siga.",
         desc_en:
           "Vodka with energy and elegance in one glass — the perfect lift to keep the night going.",
+        price: 42000,
       },
     ],
   },
@@ -135,6 +155,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Gin botánico, seco y directo — el gin tonic clásico en su máxima expresión.",
         desc_en:
           "Botanical, dry gin, straight to the point — the classic gin & tonic at its best.",
+        price: 60000,
       },
       {
         name_es: "Tanqueray No. Ten",
@@ -143,6 +164,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Gin floral y suave, con un guiño cítrico que lo hace inconfundible.",
         desc_en:
           "Floral, smooth gin with a citrus wink that makes it unmistakable.",
+        price: 65000,
       },
       {
         name_es: "Bombay Sapphire",
@@ -150,6 +172,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_es:
           "Gin aromático y equilibrado, para quienes disfrutan los detalles.",
         desc_en: "Aromatic, balanced gin, for those who savor the details.",
+        price: 58000,
       },
       {
         name_es: "Monkey 47",
@@ -158,6 +181,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Gin intenso y especiado — carácter puro para los paladares más exigentes.",
         desc_en:
           "Intense, spiced gin — pure character for the most demanding palates.",
+        price: 86000,
       },
       {
         name_es: "Hendrick's",
@@ -165,6 +189,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_es:
           "Gin fresco y floral, una experiencia sensorial distinta a cualquier otra.",
         desc_en: "Fresh, floral gin — a sensory experience unlike any other.",
+        price: 68000,
       },
     ],
   },
@@ -180,6 +205,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Tequila ácido, dulce y con un toque picante — el equilibrio perfecto en cada sorbo.",
         desc_en:
           "Sharp, sweet tequila with a hint of spice — perfect balance in every sip.",
+        price: 46000,
       },
       {
         name_es: "Paloma",
@@ -188,6 +214,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Tequila cítrico, burbujeante y refrescante — ideal para una noche ligera.",
         desc_en:
           "Citrusy, bubbly tequila — refreshing and light, ideal for an easy night.",
+        price: 46000,
       },
       {
         name_es: "Mojito",
@@ -196,6 +223,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Ron blanco con toda la frescura cubana de siempre — hierbabuena, cítricos y mucha frescura.",
         desc_en:
           "White rum with all the classic Cuban freshness — mint, citrus, and plenty of freshness.",
+        price: 46000,
       },
       {
         name_es: "Daiquiri",
@@ -204,6 +232,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Ron simple, cítrico y perfectamente balanceado — un clásico que nunca decepciona.",
         desc_en:
           "Simple, citrusy, perfectly balanced rum — a classic that never disappoints.",
+        price: 46000,
       },
       {
         name_es: "Moscow Mule",
@@ -212,6 +241,25 @@ export const cocktailMenu: MenuCategory[] = [
           "Vodka picante, cítrico y muy refrescante — servido en su icónico vaso de cobre.",
         desc_en:
           "Spicy, citrusy vodka, very refreshing — served in its iconic copper mug.",
+        price: 46000,
+      },
+      {
+        name_es: "Cuba Libre",
+        name_en: "Cuba Libre",
+        desc_es:
+          "Ron y cola con un toque de limón — el clásico caribeño directo y sin complicaciones.",
+        desc_en:
+          "Rum and cola with a splash of lime — the straightforward Caribbean classic.",
+        price: 46000,
+      },
+      {
+        name_es: "Mezcal Mule",
+        name_en: "Mezcal Mule",
+        desc_es:
+          "Mezcal picante, cítrico y muy refrescante — servido en su icónico vaso de cobre.",
+        desc_en:
+          "Spicy, citrusy mezcal, very refreshing — served in its iconic copper mug.",
+        price: 54000,
       },
       {
         name_es: "Caipirinha",
@@ -219,14 +267,34 @@ export const cocktailMenu: MenuCategory[] = [
         desc_es: "Cachaza directa y rústica, tal como se disfruta en Brasil.",
         desc_en:
           "Straightforward, rustic cachaça, just as it's enjoyed in Brazil.",
+        price: 46000,
       },
       {
-        name_es: "Caipiroska",
-        name_en: "Caipiroska",
+        name_es: "Caipiroska Fresa",
+        name_en: "Strawberry Caipiroska",
         desc_es:
-          "Vodka fresco y frutal — la versión suave de la caipirinha clásica.",
+          "Vodka fresco y frutal con fresa — la versión suave de la caipirinha clásica.",
         desc_en:
-          "Fresh, fruity vodka — the smoother take on the classic caipirinha.",
+          "Fresh, fruity vodka with strawberry — the smoother take on the classic caipirinha.",
+        price: 46000,
+      },
+      {
+        name_es: "Caipiroska Limón",
+        name_en: "Lime Caipiroska",
+        desc_es:
+          "Vodka fresco y cítrico con limón adicionado — la versión suave de la caipirinha clásica.",
+        desc_en:
+          "Fresh, citrusy vodka with added lime — the smoother take on the classic caipirinha.",
+        price: 46000,
+      },
+      {
+        name_es: "Tamarindón Splash",
+        name_en: "Tamarindón Splash",
+        desc_es:
+          "Trago tropical de tamarindo con un splash refrescante — dulce, ácido y con carácter.",
+        desc_en:
+          "Tropical tamarind drink with a refreshing splash — sweet, tart, and full of character.",
+        price: 42000,
       },
       {
         name_es: "Whisky Sour",
@@ -235,6 +303,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Whisky sedoso, cítrico y con carácter — el equilibrio entre lo dulce y lo fuerte.",
         desc_en:
           "Silky, citrusy whiskey with character — the balance between sweet and strong.",
+        price: 49000,
       },
       {
         name_es: "New York Sour",
@@ -243,6 +312,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Whisky en su versión más elegante: la evolución del sour clásico con un toque final de vino tinto.",
         desc_en:
           "Whiskey in its most elegant form: the classic sour's evolution with a red wine float.",
+        price: 49000,
       },
     ],
   },
@@ -258,6 +328,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Aperol burbujeante con prosecco, ligero y color atardecer — el aperitivo italiano por excelencia.",
         desc_en:
           "Bubbly Aperol with prosecco, light and sunset-colored — the quintessential Italian aperitif.",
+        price: 35000,
       },
       {
         name_es: "Mimosa",
@@ -265,6 +336,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_es:
           "Prosecco simple, elegante y perfecto para brindar en cualquier momento.",
         desc_en: "Simple, elegant prosecco — perfect for a toast any time.",
+        price: 35000,
       },
       {
         name_es: "Limoncello Spritz",
@@ -274,6 +346,48 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Italian limoncello with bubbles and a bright citrus kick — fresh, sweet, and full of Mediterranean character.",
         price: 46000,
+      },
+      {
+        name_es: "Copa de Sangría Tinto",
+        name_en: "Red Sangria (Glass)",
+        desc_es:
+          "Vino tinto macerado con frutas — la copa clásica para compartir el momento.",
+        desc_en:
+          "Red wine steeped with fruit — the classic glass to share the moment.",
+        price: 39000,
+        subcategory_es: "Sangría",
+        subcategory_en: "Sangria",
+      },
+      {
+        name_es: "Copa de Sangría Rosé",
+        name_en: "Rosé Sangria (Glass)",
+        desc_es:
+          "Vino rosé macerado con frutas — ligera, fresca y fácil de disfrutar.",
+        desc_en:
+          "Rosé wine steeped with fruit — light, fresh, and easy to enjoy.",
+        price: 39000,
+        subcategory_es: "Sangría",
+        subcategory_en: "Sangria",
+      },
+      {
+        name_es: "Jarra de Sangría Tinto",
+        name_en: "Red Sangria (Pitcher)",
+        desc_es:
+          "La misma sangría tinto, en formato jarra para compartir en grupo.",
+        desc_en: "The same red sangria, in a pitcher to share with the table.",
+        price: 180000,
+        subcategory_es: "Sangría",
+        subcategory_en: "Sangria",
+      },
+      {
+        name_es: "Jarra de Sangría Rosé",
+        name_en: "Rosé Sangria (Pitcher)",
+        desc_es:
+          "La misma sangría rosé, en formato jarra para compartir en grupo.",
+        desc_en: "The same rosé sangria, in a pitcher to share with the table.",
+        price: 180000,
+        subcategory_es: "Sangría",
+        subcategory_en: "Sangria",
       },
     ],
   },
@@ -289,6 +403,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Toda la frescura del mojito clásico, sin una gota de alcohol — hierbabuena, cítricos y mucha efervescencia.",
         desc_en:
           "All the freshness of the classic mojito, without a drop of alcohol — mint, citrus, and plenty of fizz.",
+        price: 29000,
       },
       {
         name_es: "Piña Colada sin Licor",
@@ -297,6 +412,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Dulce, tropical y cremosa — un viaje al Caribe en cada sorbo, sin alcohol.",
         desc_en:
           "Sweet, tropical, and creamy — a trip to the Caribbean in every sip, alcohol-free.",
+        price: 38000,
       },
       {
         name_es: "Moscow Mule sin Licor",
@@ -321,6 +437,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Fresca, ácida y ligera — el respiro perfecto entre copa y copa.",
         desc_en:
           "Fresh, tart, and light — the perfect breather between drinks.",
+        price: 18000,
       },
       {
         name_es: "Hierbabuena",
@@ -329,6 +446,7 @@ export const cocktailMenu: MenuCategory[] = [
           "Refrescante y aromática, con un toque herbal que despierta los sentidos.",
         desc_en:
           "Refreshing and aromatic, with an herbal touch that wakes up the senses.",
+        price: 23000,
       },
     ],
   },
@@ -523,13 +641,11 @@ export const menu: MenuCategory[] = [
       },
       {
         // Reemplaza al antiguo "Black Label": la carta ya no lo maneja.
-        // Precio heredado del ítem anterior — confirmar si J.W Red Label
-        // tiene un valor distinto.
         name_es: "J.W Red Label",
         name_en: "J.W Red Label",
         desc_es: "Blended escocés, servido solo, con hielo o en las rocas",
         desc_en: "Blended Scotch, served neat, on the rocks, or with a splash",
-        price: 45000,
+        price: 40000,
       },
       {
         name_es: "Ron Añejo 7 Años",
@@ -589,6 +705,16 @@ export const menu: MenuCategory[] = [
         desc_en:
           "100% agave tequila, barrel-rested, smooth with notes of vanilla and oak.",
         price: 28000,
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Gran Centenario Plata",
+        name_en: "Gran Centenario Plata",
+        desc_es: "Tequila 100% agave sin añejar — puro, fresco y directo.",
+        desc_en:
+          "100% agave tequila, unaged — pure, fresh, and straightforward.",
+        price: 25000,
         subcategory_es: "Shots",
         subcategory_en: "Shots",
       },
@@ -793,8 +919,66 @@ export const menu: MenuCategory[] = [
         subcategory_es: "Bebidas y Mixers",
         subcategory_en: "Mixers & Soft Drinks",
       },
+      {
+        name_es: "Servicio de Michelada",
+        name_en: "Michelada Service",
+        desc_es:
+          "Preparación michelada para tu cerveza — sal, limón y salsas de la casa.",
+        desc_en: "Michelada prep for your beer — salt, lime, and house sauces.",
+        price: 5000,
+        subcategory_es: "Bebidas y Mixers",
+        subcategory_en: "Mixers & Soft Drinks",
+      },
 
-      // --- Café — pendiente confirmar precio ---
+      // --- Café ---
+      {
+        name_es: "Café Espresso",
+        name_en: "Espresso",
+        desc_es: "Café espresso intenso y concentrado, tal como debe ser.",
+        desc_en: "Bold, concentrated espresso, exactly as it should be.",
+        price: 7000,
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Café Americano",
+        name_en: "Americano",
+        desc_es: "Espresso alargado con agua caliente — suave y aromático.",
+        desc_en: "Espresso lengthened with hot water — smooth and aromatic.",
+        price: 8000,
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Café Latte",
+        name_en: "Latte",
+        desc_es: "Espresso con leche vaporizada — cremoso y equilibrado.",
+        desc_en: "Espresso with steamed milk — creamy and balanced.",
+        price: 12000,
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Café Capuchino",
+        name_en: "Cappuccino",
+        desc_es:
+          "Espresso, leche vaporizada y espuma en proporciones clásicas.",
+        desc_en: "Espresso, steamed milk, and foam in classic proportions.",
+        price: 14000,
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Café Capuchino Baileys",
+        name_en: "Baileys Cappuccino",
+        desc_es: "Capuchino clásico con un toque de crema de whiskey Baileys.",
+        desc_en: "Classic cappuccino with a splash of Baileys Irish cream.",
+        price: 25000,
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+
+      // --- Cold Brew — pendiente confirmar precio ---
       {
         name_es: "Cold Brew",
         name_en: "Cold Brew",
