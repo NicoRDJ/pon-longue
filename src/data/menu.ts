@@ -640,9 +640,17 @@ export const menu: MenuCategory[] = [
         price: 42000,
       },
       {
-        // Reemplaza al antiguo "Black Label": la carta ya no lo maneja.
         name_es: "J.W Red Label",
         name_en: "J.W Red Label",
+        desc_es: "Blended escocés, servido solo, con hielo o en las rocas",
+        desc_en: "Blended Scotch, served neat, on the rocks, or with a splash",
+        price: 40000,
+      },
+      {
+        // Mismo precio que J.W Red Label por instrucción explícita del
+        // cliente — son dos ítems distintos, no uno reemplaza al otro.
+        name_es: "J.W Black Label",
+        name_en: "J.W Black Label",
         desc_es: "Blended escocés, servido solo, con hielo o en las rocas",
         desc_en: "Blended Scotch, served neat, on the rocks, or with a splash",
         price: 40000,
