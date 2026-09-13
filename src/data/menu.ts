@@ -266,6 +266,15 @@ export const cocktailMenu: MenuCategory[] = [
           "Prosecco simple, elegante y perfecto para brindar en cualquier momento.",
         desc_en: "Simple, elegant prosecco — perfect for a toast any time.",
       },
+      {
+        name_es: "Limoncello Spritz",
+        name_en: "Limoncello Spritz",
+        desc_es:
+          "Limoncello italiano con burbujas y un toque cítrico intenso — fresco, dulce y con carácter mediterráneo.",
+        desc_en:
+          "Italian limoncello with bubbles and a bright citrus kick — fresh, sweet, and full of Mediterranean character.",
+        price: 46000,
+      },
     ],
   },
   {
@@ -288,6 +297,15 @@ export const cocktailMenu: MenuCategory[] = [
           "Dulce, tropical y cremosa — un viaje al Caribe en cada sorbo, sin alcohol.",
         desc_en:
           "Sweet, tropical, and creamy — a trip to the Caribbean in every sip, alcohol-free.",
+      },
+      {
+        name_es: "Moscow Mule sin Licor",
+        name_en: "Moscow Mule (Alcohol-Free)",
+        desc_es:
+          "Toda la chispa picante y cítrica del Moscow Mule clásico, sin una gota de alcohol — servido en su vaso de cobre.",
+        desc_en:
+          "All the spicy, citrusy kick of the classic Moscow Mule, without a drop of alcohol — served in its copper mug.",
+        price: 33000,
       },
     ],
   },
@@ -486,8 +504,8 @@ export const menu: MenuCategory[] = [
   },
   {
     id: "licores",
-    es: "Licores, Vinos y Destilados",
-    en: "Spirits, Wine & Liquor",
+    es: "Licores, Vinos y Bebidas",
+    en: "Spirits, Wine & Beverages",
     items: [
       {
         name_es: "Copa de Vino Tinto Reserva",
@@ -504,8 +522,11 @@ export const menu: MenuCategory[] = [
         price: 42000,
       },
       {
-        name_es: "Whisky Etiqueta Negra",
-        name_en: "Black Label Whisky",
+        // Reemplaza al antiguo "Black Label": la carta ya no lo maneja.
+        // Precio heredado del ítem anterior — confirmar si J.W Red Label
+        // tiene un valor distinto.
+        name_es: "J.W Red Label",
+        name_en: "J.W Red Label",
         desc_es: "Blended escocés, servido solo, con hielo o en las rocas",
         desc_en: "Blended Scotch, served neat, on the rocks, or with a splash",
         price: 45000,
@@ -537,6 +558,279 @@ export const menu: MenuCategory[] = [
         desc_es: "Ahumado, servido solo con naranja y sal de gusano",
         desc_en: "Smoky, served neat with orange and worm salt",
         price: 44000,
+      },
+
+      // --- Shots — pendiente confirmar precio salvo donde se indica ---
+      {
+        name_es: "Jameson",
+        name_en: "Jameson",
+        desc_es:
+          "Whisky irlandés suave y versátil — el clásico infalible, solo o en las rocas.",
+        desc_en:
+          "Smooth, versatile Irish whiskey — the reliable classic, neat or on the rocks.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "J.W Blue Label",
+        name_en: "J.W Blue Label",
+        desc_es:
+          "La cumbre de Johnnie Walker: blend ultra premium, sedoso y complejo.",
+        desc_en:
+          "The pinnacle of Johnnie Walker: an ultra-premium blend, silky and complex.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Gran Centenario Reposado",
+        name_en: "Gran Centenario Reposado",
+        desc_es:
+          "Tequila 100% agave reposado en barrica, suave y con notas a vainilla y roble.",
+        desc_en:
+          "100% agave tequila, barrel-rested, smooth with notes of vanilla and oak.",
+        price: 28000,
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Clase Azul Reposado",
+        name_en: "Clase Azul Reposado",
+        desc_es:
+          "Tequila premium en su icónica botella de cerámica pintada a mano; reposado suave y elegante.",
+        desc_en:
+          "Premium tequila in its iconic hand-painted ceramic bottle; smooth, elegant reposado.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Disaronno",
+        name_en: "Disaronno",
+        desc_es:
+          "Licor italiano de almendras, dulce y aromático — solo, en las rocas o en cóctel.",
+        desc_en:
+          "Italian almond liqueur, sweet and aromatic — neat, on the rocks, or in a cocktail.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Flor de Caña 12 Años",
+        name_en: "Flor de Caña 12 Years",
+        desc_es:
+          "Ron nicaragüense añejado 12 años, notas a caramelo, roble y especias.",
+        desc_en:
+          "Nicaraguan rum aged 12 years, notes of caramel, oak, and spice.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Buchanan's Pineapple",
+        name_en: "Buchanan's Pineapple",
+        desc_es:
+          "Whisky escocés con infusión de piña — dulce, tropical y fácil de tomar.",
+        desc_en:
+          "Scotch whisky infused with pineapple — sweet, tropical, and easy-drinking.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+      {
+        name_es: "Viche Curao del Río",
+        name_en: "Viche Curao del Río",
+        desc_es:
+          "Viche del Pacífico colombiano curado con frutas y hierbas de la región — historia y tradición en cada trago.",
+        desc_en:
+          "Pacific-coast Colombian viche cured with regional fruits and herbs — history and tradition in every pour.",
+        subcategory_es: "Shots",
+        subcategory_en: "Shots",
+      },
+
+      // --- Botellas — pendiente confirmar precio salvo donde se indica ---
+      {
+        name_es: "Jägermeister",
+        name_en: "Jägermeister",
+        desc_es:
+          "Licor de hierbas alemán, intenso y con carácter — el infaltable de la noche.",
+        desc_en:
+          "German herbal liqueur, bold and full of character — a night-out staple.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Jameson",
+        name_en: "Jameson",
+        desc_es:
+          "Whisky irlandés suave y versátil — el clásico infalible, solo o en las rocas.",
+        desc_en:
+          "Smooth, versatile Irish whiskey — the reliable classic, neat or on the rocks.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "J.W Blue Label",
+        name_en: "J.W Blue Label",
+        desc_es:
+          "La cumbre de Johnnie Walker: blend ultra premium, sedoso y complejo.",
+        desc_en:
+          "The pinnacle of Johnnie Walker: an ultra-premium blend, silky and complex.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Gran Centenario Reposado",
+        name_en: "Gran Centenario Reposado",
+        desc_es:
+          "Tequila 100% agave reposado en barrica, suave y con notas a vainilla y roble.",
+        desc_en:
+          "100% agave tequila, barrel-rested, smooth with notes of vanilla and oak.",
+        price: 280000,
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Gran Centenario Plata",
+        name_en: "Gran Centenario Plata",
+        desc_es: "Tequila 100% agave sin añejar — puro, fresco y directo.",
+        desc_en:
+          "100% agave tequila, unaged — pure, fresh, and straightforward.",
+        price: 260000,
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Clase Azul Reposado",
+        name_en: "Clase Azul Reposado",
+        desc_es:
+          "Tequila premium en su icónica botella de cerámica pintada a mano; reposado suave y elegante.",
+        desc_en:
+          "Premium tequila in its iconic hand-painted ceramic bottle; smooth, elegant reposado.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Disaronno",
+        name_en: "Disaronno",
+        desc_es:
+          "Licor italiano de almendras, dulce y aromático — solo, en las rocas o en cóctel.",
+        desc_en:
+          "Italian almond liqueur, sweet and aromatic — neat, on the rocks, or in a cocktail.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Flor de Caña 12 Años",
+        name_en: "Flor de Caña 12 Years",
+        desc_es:
+          "Ron nicaragüense añejado 12 años, notas a caramelo, roble y especias.",
+        desc_en:
+          "Nicaraguan rum aged 12 years, notes of caramel, oak, and spice.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Buchanan's Pineapple",
+        name_en: "Buchanan's Pineapple",
+        desc_es:
+          "Whisky escocés con infusión de piña — dulce, tropical y fácil de tomar.",
+        desc_en:
+          "Scotch whisky infused with pineapple — sweet, tropical, and easy-drinking.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+      {
+        name_es: "Viche Curao del Río",
+        name_en: "Viche Curao del Río",
+        desc_es:
+          "Viche del Pacífico colombiano curado con frutas y hierbas de la región — historia y tradición en cada trago.",
+        desc_en:
+          "Pacific-coast Colombian viche cured with regional fruits and herbs — history and tradition in every pour.",
+        subcategory_es: "Botellas",
+        subcategory_en: "Bottles",
+      },
+
+      // --- Media botella — pendiente confirmar precio ---
+      {
+        name_es: "Jägermeister",
+        name_en: "Jägermeister",
+        desc_es:
+          "Licor de hierbas alemán, intenso y con carácter — el infaltable de la noche.",
+        desc_en:
+          "German herbal liqueur, bold and full of character — a night-out staple.",
+        subcategory_es: "Media Botella",
+        subcategory_en: "Half Bottle",
+      },
+      {
+        name_es: "Viche Curao del Río",
+        name_en: "Viche Curao del Río",
+        desc_es:
+          "Viche del Pacífico colombiano curado con frutas y hierbas de la región — historia y tradición en cada trago.",
+        desc_en:
+          "Pacific-coast Colombian viche cured with regional fruits and herbs — history and tradition in every pour.",
+        subcategory_es: "Media Botella",
+        subcategory_en: "Half Bottle",
+      },
+
+      // --- Bebidas y mixers — pendiente confirmar precio ---
+      {
+        name_es: "Red Bull",
+        name_en: "Red Bull",
+        desc_es: "Energizante para acompañar tu trago.",
+        desc_en: "Energy drink to mix with your spirit.",
+        subcategory_es: "Bebidas y Mixers",
+        subcategory_en: "Mixers & Soft Drinks",
+      },
+      {
+        name_es: "Gatorade",
+        name_en: "Gatorade",
+        desc_es: "Bebida hidratante, ideal para refrescar entre tragos.",
+        desc_en: "Sports drink, great for refreshing between rounds.",
+        subcategory_es: "Bebidas y Mixers",
+        subcategory_en: "Mixers & Soft Drinks",
+      },
+      {
+        name_es: "Canada Dry",
+        name_en: "Canada Dry",
+        desc_es: "Ginger ale burbujeante, el mixer clásico para whisky y ron.",
+        desc_en: "Bubbly ginger ale, the classic mixer for whisky and rum.",
+        subcategory_es: "Bebidas y Mixers",
+        subcategory_en: "Mixers & Soft Drinks",
+      },
+
+      // --- Café — pendiente confirmar precio ---
+      {
+        name_es: "Cold Brew",
+        name_en: "Cold Brew",
+        desc_es: "Café frío de extracción lenta, suave e intenso en sabor.",
+        desc_en: "Slow-extracted cold brew coffee, smooth and full-flavored.",
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Cold Brew Latte",
+        name_en: "Cold Brew Latte",
+        desc_es:
+          "Cold brew con un toque cremoso de leche — suave y equilibrado.",
+        desc_en: "Cold brew with a creamy touch of milk — smooth and balanced.",
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Cold Brew Soda",
+        name_en: "Cold Brew Soda",
+        desc_es:
+          "Cold brew refrescado con soda — ligero, burbujeante y con toda la fuerza del café.",
+        desc_en:
+          "Cold brew topped with soda — light, fizzy, and full of coffee kick.",
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
+      },
+      {
+        name_es: "Cold Brew Naranja",
+        name_en: "Orange Cold Brew",
+        desc_es:
+          "Cold brew con un giro cítrico de naranja — combinación inesperada y refrescante.",
+        desc_en:
+          "Cold brew with a citrusy orange twist — an unexpected, refreshing combo.",
+        subcategory_es: "Café",
+        subcategory_en: "Coffee",
       },
     ],
   },
