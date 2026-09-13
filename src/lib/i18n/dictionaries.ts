@@ -49,7 +49,7 @@ export const dictionaries = {
     "menu.eyebrow": "La carta",
     "menu.title": "Una selección pensada al detalle.",
     "menu.lead":
-      "Cócteles de autor, platos para compartir y una carta de vinos curada. Esta es la misma carta que encontrarás escaneando el código QR en tu mesa.",
+      "Cócteles de autor, una barra completa de licores y una carta de vinos curada. Esta es la misma carta que encontrarás escaneando el código QR en tu mesa.",
     "menu.ctaFull": "Ver la carta completa",
     "menu.qrNote":
       "El código QR de las mesas apuntará a /carta — la página de carta independiente, lista para imprimir.",
@@ -256,7 +256,7 @@ export const dictionaries = {
 
     "wa.float": "Reservar por WhatsApp",
 
-    "cartaPage.title": "Cócteles de autor y cocina de mercado.",
+    "cartaPage.title": "Cócteles de autor y una barra de altura.",
     "cartaPage.lead":
       "Carta de muestra — precios en pesos colombianos, sujeto a cambios. Esta es la página que se enlaza desde el código QR de las mesas.",
     "cartaPage.back": "← Volver al sitio de PON Lounge",
@@ -313,7 +313,7 @@ export const dictionaries = {
     "menu.eyebrow": "The menu",
     "menu.title": "A selection considered down to the last detail.",
     "menu.lead":
-      "Signature cocktails, sharing plates, and a curated wine list. This is the same menu you'll find by scanning the QR code at your table.",
+      "Signature cocktails, a full spirits bar, and a curated wine list. This is the same menu you'll find by scanning the QR code at your table.",
     "menu.ctaFull": "View the full menu",
     "menu.qrNote":
       "The table QR codes will point to /carta — the standalone menu page, print-ready.",
@@ -519,7 +519,7 @@ export const dictionaries = {
 
     "wa.float": "Reserve via WhatsApp",
 
-    "cartaPage.title": "Signature cocktails and market cooking.",
+    "cartaPage.title": "Signature cocktails and a world-class bar.",
     "cartaPage.lead":
       "Sample menu — prices in Colombian pesos, subject to change. This is the page linked from the table QR codes.",
     "cartaPage.back": "← Back to the PON Lounge site",
