@@ -43,6 +43,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Almond liqueur with an aromatic softness and a lingering elegance. A spiced finish that invites one more glass.",
         price: 52000,
+        image: "/carta/dama-de-pon.jpg",
       },
       {
         name_es: "Pacífico Sour",
@@ -70,6 +71,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Viche wrapped in tropical sweetness. Like a beach afternoon condensed into one drink.",
         price: 46000,
+        image: "/carta/viche-colada.jpg",
       },
       {
         name_es: "Black Lounge",
@@ -95,6 +97,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Bitter, intense gin with no compromises. For those who already know exactly what they want.",
         price: 49000,
+        image: "/carta/negroni.jpg",
       },
       {
         name_es: "Old Fashioned",
@@ -104,6 +107,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Bourbon, time, and a touch of smoke. The classic that never goes out of style.",
         price: 49000,
+        image: "/carta/old-fashioned.jpg",
       },
       {
         name_es: "Mezcalita",
@@ -122,6 +126,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Cold, direct, elegant gin. Sophistication in its purest form.",
         price: 49000,
+        image: "/carta/dry-martini.jpg",
       },
       {
         name_es: "Manhattan",
@@ -131,6 +136,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Velvety whiskey with character, for nights meant to be savored slowly.",
         price: 49000,
+        image: "/carta/manhattan.jpg",
       },
       {
         name_es: "Espresso Martini",
@@ -140,6 +146,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Vodka with energy and elegance in one glass — the perfect lift to keep the night going.",
         price: 42000,
+        image: "/carta/espresso-martini.jpg",
       },
     ],
   },
@@ -165,6 +172,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Floral, smooth gin with a citrus wink that makes it unmistakable.",
         price: 65000,
+        image: "/carta/tanqueray-no-ten.jpg",
       },
       {
         name_es: "Bombay Sapphire",
@@ -206,6 +214,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Sharp, sweet tequila with a hint of spice — perfect balance in every sip.",
         price: 46000,
+        image: "/carta/margarita.jpg",
       },
       {
         name_es: "Paloma",
@@ -233,6 +242,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Simple, citrusy, perfectly balanced rum — a classic that never disappoints.",
         price: 46000,
+        image: "/carta/daiquiri.jpg",
       },
       {
         name_es: "Moscow Mule",
@@ -242,6 +252,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Spicy, citrusy vodka, very refreshing — served in its iconic copper mug.",
         price: 46000,
+        image: "/carta/moscow-mule.jpg",
       },
       {
         name_es: "Cuba Libre",
@@ -260,6 +271,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Spicy, citrusy mezcal, very refreshing — served in its iconic copper mug.",
         price: 54000,
+        image: "/carta/mezcal-mule.jpg",
       },
       {
         name_es: "Caipirinha",
@@ -268,6 +280,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Straightforward, rustic cachaça, just as it's enjoyed in Brazil.",
         price: 46000,
+        image: "/carta/caipirinha.jpg",
       },
       {
         name_es: "Caipiroska Fresa",
@@ -277,6 +290,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Fresh, fruity vodka with strawberry — the smoother take on the classic caipirinha.",
         price: 46000,
+        image: "/carta/caipiroska-fresa.jpg",
       },
       {
         name_es: "Caipiroska Limón",
@@ -295,6 +309,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Tropical tamarind drink with a refreshing splash — sweet, tart, and full of character.",
         price: 42000,
+        image: "/carta/tamarindo-splash.jpg",
       },
       {
         name_es: "Whisky Sour",
@@ -329,6 +344,7 @@ export const cocktailMenu: MenuCategory[] = [
         desc_en:
           "Bubbly Aperol with prosecco, light and sunset-colored — the quintessential Italian aperitif.",
         price: 35000,
+        image: "/carta/aperol-spritz.jpg",
       },
       {
         name_es: "Mimosa",
