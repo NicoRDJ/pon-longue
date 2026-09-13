@@ -30,6 +30,16 @@ const tiles = [
   },
   { captionKey: "gallery.c7", image: "/photos/servicio-mesera.png", span: "" },
   { captionKey: "gallery.c8", image: "/photos/licores-premium.png", span: "" },
+  {
+    captionKey: "gallery.c9",
+    image: "/photos/preparacion-mojitos.png",
+    span: "",
+  },
+  {
+    captionKey: "gallery.c10",
+    image: "/photos/mojitos-listos.png",
+    span: "",
+  },
 ] satisfies { captionKey: DictKey; image: string; span: string }[];
 
 export default function Gallery() {

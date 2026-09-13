@@ -47,3 +47,10 @@ next-env.d.ts
 # testing
 /playwright-report/
 /test-results/
+
+# local-only source material — raw client assets, not for the public repo.
+# Real content already lives in /public/photos (web-ready copies) and
+# src/data/menu.ts (extracted menu data); these stay local as originals/backup.
+/recetas cocteles/
+/fotos website/
+/PON Lounge - Carta (provisional).pdf

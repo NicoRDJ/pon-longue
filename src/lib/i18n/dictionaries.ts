@@ -99,6 +99,8 @@ export const dictionaries = {
     "gallery.c6": "Ambiente nocturno",
     "gallery.c7": "Servicio",
     "gallery.c8": "Licores premium",
+    "gallery.c9": "Preparación de mojitos",
+    "gallery.c10": "Mojitos recién servidos",
 
     "location.eyebrow": "Ubicación",
     "location.title": "Encuéntranos en Medellín.",
@@ -360,6 +362,8 @@ export const dictionaries = {
     "gallery.c6": "Night ambiance",
     "gallery.c7": "Service",
     "gallery.c8": "Premium spirits",
+    "gallery.c9": "Mixing mojitos",
+    "gallery.c10": "Freshly served mojitos",
 
     "location.eyebrow": "Location",
     "location.title": "Find us in Medellín.",
