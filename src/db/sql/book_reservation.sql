@@ -14,6 +14,10 @@
 -- date+time slot (the lock key is derived from them) without blocking
 -- bookings for other slots, and releases automatically at the end of the
 -- transaction — no manual unlock needed.
+-- The signature gained p_source/p_lang; drop the old 11-argument version
+-- so it doesn't linger as a separate overload.
+drop function if exists book_reservation(text, text, text, int, date, time, text, text, int, int, text);
+
 create or replace function book_reservation(
   p_name text,
   p_email text,
@@ -25,7 +29,9 @@ create or replace function book_reservation(
   p_notes text,
   p_deposit_required int,
   p_deposit_amount int,
-  p_deposit_reference text
+  p_deposit_reference text,
+  p_source reservation_source,
+  p_lang reservation_lang
 ) returns table (id uuid, code text, status text, remaining int, deposit_required int) as $$
 declare
   v_capacity int;
@@ -58,7 +64,7 @@ begin
   from reservations
   where reservation_date = p_date
     and reservation_time = p_time
-    and status = 'confirmed';
+    and reservations.status = 'confirmed';
 
   if v_booked + p_party_size > v_capacity then
     return query select null::uuid, null::text, 'full'::text, greatest(v_capacity - v_booked, 0), p_deposit_required;
@@ -74,10 +80,12 @@ begin
 
   insert into reservations
     (confirmation_code, name, email, phone, party_size, reservation_date, reservation_time,
-     occasion, notes, status, deposit_required, deposit_amount, deposit_reference, deposit_verified)
+     occasion, notes, status, source, lang, deposit_required, deposit_amount, deposit_reference,
+     deposit_verified)
   values
     (v_code, p_name, p_email, p_phone, p_party_size, p_date, p_time, p_occasion, p_notes,
-     'pending_deposit', p_deposit_required, p_deposit_amount, p_deposit_reference, false)
+     'pending_deposit', p_source, p_lang, p_deposit_required, p_deposit_amount, p_deposit_reference,
+     false)
   returning reservations.id into v_new_id;
 
   return query

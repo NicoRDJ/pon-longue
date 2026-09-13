@@ -12,7 +12,7 @@ declare
   v_capacity int;
   v_booked int;
 begin
-  select * into v_row from reservations where confirmation_code = p_code;
+  select * into v_row from reservations where confirmation_code = p_code for update;
 
   if not found then
     return query select 'not_found'::text;
@@ -36,7 +36,7 @@ begin
   from reservations
   where reservation_date = v_row.reservation_date
     and reservation_time = v_row.reservation_time
-    and status = 'confirmed';
+    and reservations.status = 'confirmed';
 
   if v_booked + v_row.party_size > coalesce(v_capacity, 0) then
     return query select 'full'::text;
@@ -44,7 +44,7 @@ begin
   end if;
 
   update reservations
-  set status = 'confirmed', deposit_verified = true
+  set status = 'confirmed', deposit_verified = true, confirmed_at = now(), updated_at = now()
   where id = v_row.id;
 
   return query select 'confirmed'::text;
@@ -59,7 +59,7 @@ create or replace function reject_deposit(
 declare
   v_row reservations%rowtype;
 begin
-  select * into v_row from reservations where confirmation_code = p_code;
+  select * into v_row from reservations where confirmation_code = p_code for update;
 
   if not found then
     return query select 'not_found'::text;
@@ -71,7 +71,10 @@ begin
     return;
   end if;
 
-  update reservations set status = 'cancelled' where id = v_row.id;
+  update reservations
+  set status = 'cancelled', cancellation_reason = 'deposit_rejected', cancelled_at = now(),
+      updated_at = now()
+  where id = v_row.id;
 
   return query select 'rejected'::text;
 end;

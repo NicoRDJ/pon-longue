@@ -22,6 +22,12 @@ function getConnectionString(): string {
   return connectionString;
 }
 
+// True when a real Postgres connection string is configured. Without one,
+// the app falls back to the local JSON-file stores under .data/.
+export function hasRemoteDatabase(): boolean {
+  return Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+}
+
 export function getSql(): NeonQueryFunction<false, false> {
   cachedSql ??= neon(getConnectionString());
   return cachedSql;

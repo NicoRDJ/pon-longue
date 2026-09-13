@@ -31,7 +31,7 @@ export async function POST(
         name: result.reservation.name,
         date: result.reservation.date,
         time: result.reservation.time,
-        lang: "es",
+        lang: result.reservation.lang,
       });
     } catch (err) {
       console.error("Failed to send deposit-rejected email:", err);

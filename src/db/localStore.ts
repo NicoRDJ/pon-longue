@@ -23,6 +23,9 @@ import { DEFAULT_SLOTS } from "@/lib/hours";
 import { isPastCancellationCutoff } from "@/lib/reservation";
 
 type ReservationStatus = "confirmed" | "pending_deposit" | "cancelled";
+export type ReservationSource = "web" | "email";
+export type ReservationLang = "es" | "en";
+type CancellationReason = "customer" | "deposit_rejected";
 
 type LocalReservation = {
   id: string;
@@ -40,7 +43,13 @@ type LocalReservation = {
   depositAmount: number;
   depositReference: string | null;
   depositVerified: boolean;
+  source: ReservationSource;
+  lang: ReservationLang;
+  cancellationReason: CancellationReason | null;
   createdAt: string;
+  updatedAt: string;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
 };
 
 type LocalSlot = { slotTime: string; capacity: number };
@@ -80,6 +89,8 @@ export type ReservationSummary = {
   depositAmount: number;
   depositReference: string | null;
   depositVerified: boolean;
+  source: ReservationSource;
+  lang: ReservationLang;
 };
 
 export type CancelResult = {
@@ -152,7 +163,15 @@ function load(): StoreData {
     const parsed = JSON.parse(raw) as StoreData;
     return {
       slots: parsed.slots?.length ? parsed.slots : defaultData().slots,
-      reservations: parsed.reservations ?? [],
+      reservations: (parsed.reservations ?? []).map((r) => ({
+        ...r,
+        source: r.source ?? "web",
+        lang: r.lang ?? "es",
+        cancellationReason: r.cancellationReason ?? null,
+        updatedAt: r.updatedAt ?? r.createdAt,
+        confirmedAt: r.confirmedAt ?? null,
+        cancelledAt: r.cancelledAt ?? null,
+      })),
     };
   } catch {
     return defaultData();
@@ -232,6 +251,8 @@ function toSummary(r: LocalReservation): ReservationSummary {
     depositAmount: r.depositAmount,
     depositReference: r.depositReference,
     depositVerified: r.depositVerified,
+    source: r.source,
+    lang: r.lang,
   };
 }
 
@@ -261,6 +282,8 @@ export async function bookLocalReservation(input: {
   depositRequired: number;
   depositAmount: number;
   depositReference: string | null;
+  source: ReservationSource;
+  lang: ReservationLang;
 }): Promise<BookResult> {
   if (!input.partySize || input.partySize < 1) {
     return {
@@ -309,6 +332,7 @@ export async function bookLocalReservation(input: {
 
     // Not held/counted until staff verifies the deposit — see the
     // module-level comment for why.
+    const now = new Date().toISOString();
     const reservation: LocalReservation = {
       id: randomUUID(),
       confirmationCode: generateConfirmationCode(data),
@@ -325,7 +349,13 @@ export async function bookLocalReservation(input: {
       depositAmount: input.depositAmount,
       depositReference: input.depositReference,
       depositVerified: false,
-      createdAt: new Date().toISOString(),
+      source: input.source,
+      lang: input.lang,
+      cancellationReason: null,
+      createdAt: now,
+      updatedAt: now,
+      confirmedAt: null,
+      cancelledAt: null,
     };
     data.reservations.push(reservation);
     persist(data);
@@ -386,7 +416,11 @@ export async function cancelLocalReservation(
       };
     }
 
+    const now = new Date().toISOString();
     r.status = "cancelled";
+    r.cancellationReason = "customer";
+    r.cancelledAt = now;
+    r.updatedAt = now;
     persist(data);
     return {
       status: "cancelled",
@@ -438,8 +472,11 @@ export async function approveLocalDeposit(
       return { status: "full", reservation: toSummary(r) };
     }
 
+    const now = new Date().toISOString();
     r.status = "confirmed";
     r.depositVerified = true;
+    r.confirmedAt = now;
+    r.updatedAt = now;
     persist(data);
     return { status: "confirmed", reservation: toSummary(r) };
   });
@@ -457,7 +494,11 @@ export async function rejectLocalDeposit(
     if (!r) return { status: "not_found" };
     if (r.status !== "pending_deposit") return { status: "not_pending" };
 
+    const now = new Date().toISOString();
     r.status = "cancelled";
+    r.cancellationReason = "deposit_rejected";
+    r.cancelledAt = now;
+    r.updatedAt = now;
     persist(data);
     return { status: "rejected", reservation: toSummary(r) };
   });

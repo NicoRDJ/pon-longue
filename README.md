@@ -98,31 +98,39 @@ database), the wizard **falls back further** to the original manual flow
 
 ### Switching to real Postgres
 
-1. **Provision Postgres.** In the Vercel dashboard, open this project →
-   **Storage** → **Create Database** → **Postgres** (this is Neon under the
-   hood). This injects `DATABASE_URL` into the project's env vars
-   automatically.
-2. **Pull the connection string locally:**
+1. **Provision Postgres on Neon.** Create a project at
+   [neon.tech](https://neon.tech) (free plan is enough to start). Neon is
+   reached over HTTPS, so it works from any host (Hostinger, Vercel, a
+   VPS...) with no code changes.
+2. **Set the connection string.** Copy it from Neon's dashboard
+   (**Connect** → connection string, with `sslmode=require`) into
+   `DATABASE_URL` — in `.env.local` locally, and in the hosting panel's
+   environment variables in production.
+3. **Create the tables, install the SQL functions, seed time slots:**
    ```bash
-   npx vercel login      # opens a browser to authenticate
-   npx vercel link       # connect this folder to the Vercel project
-   npx vercel env pull .env.local
+   npm run db:setup
    ```
-3. **Create the tables:**
-   ```bash
-   npm run db:push
-   ```
-4. **Install the booking function + seed default time slots/capacity:**
-   ```bash
-   npm run db:seed
-   ```
-   Re-running `db:seed` is safe (the function is `CREATE OR REPLACE`, and
-   slot seeding upserts).
-5. **Add a Resend API key** (resend.com → API Keys → Sending access) as
-   `RESEND_API_KEY` in `.env.local` and in Vercel's project env vars. Until
+   This runs `db:migrate` (applies `src/db/migrations/`) and then `db:seed`
+   (installs `book_reservation()`/`approve_deposit()`/`reject_deposit()` and
+   upserts the slots from `src/lib/hours.ts`). Safe to re-run.
+4. **Add a Resend API key** (resend.com → API Keys → Sending access) as
+   `RESEND_API_KEY` in `.env.local` and in the hosting panel's env vars. Until
    a real domain (e.g. `ponlounge.co`) is verified in Resend, emails send
    from `onboarding@resend.dev`, which works fine for any recipient — just
    swap the `FROM_ADDRESS` in `src/lib/email.ts` once a domain is verified.
+
+### Database tables
+
+| Table                      | What it stores                                                                                                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `reservations`             | Every booking: customer details, date/time, party size, status, channel (`web`/`email`), language, deposit (required/reported/reference/verified), and when it was created/confirmed/cancelled and why |
+| `slot_capacity`            | Capacity per time slot (seeded from `src/lib/hours.ts`)                                                                                                                                                |
+| `deposit_receipts`         | The transfer screenshot the customer uploads, keyed by its `DEP-XXXXXX` reference                                                                                                                      |
+| `processed_webhook_events` | Inbound-email webhook deliveries already handled, so a retry can't double-book                                                                                                                         |
+
+To change the schema: edit `src/db/schema.ts`, run `npm run db:generate`
+(creates a new file in `src/db/migrations/` — commit it), then
+`npm run db:migrate`.
 
 ### Changing hours or capacity
 
@@ -169,7 +177,9 @@ and real Postgres) the same way availability/booking do.
 src/lib/hours.ts                # Single source of truth: hours, slots, capacity, cancellation cutoff
 src/db/reservationsStore.ts     # Picks local-simulated vs real Postgres automatically
 src/db/localStore.ts            # Local JSON-file-simulated DB (no setup required)
-src/db/schema.ts              # Drizzle schema: reservations, slot_capacity
+src/db/schema.ts              # Drizzle schema: reservations, slot_capacity, deposit_receipts, processed_webhook_events
+src/db/migrations/            # Generated SQL migrations (npm run db:generate)
+src/db/migrate.ts             # Applies migrations (npm run db:migrate)
 src/db/client.ts               # Lazily-initialized Neon/Drizzle client
 src/db/sql/book_reservation.sql  # The atomic booking Postgres function
 src/db/seed.ts                  # Installs the function + seeds default slots (Postgres only)
@@ -204,7 +214,9 @@ src/lib/useCancelReservation.ts            # Shared cancel-request hook (used by
 | `npm run test:e2e:ui`  | E2E tests with Playwright's UI runner                 |
 | `npm run db:generate`  | Generate a Drizzle migration from `schema.ts` changes |
 | `npm run db:push`      | Push the current schema straight to the database      |
-| `npm run db:seed`      | Install `book_reservation()` + seed default slots     |
+| `npm run db:migrate`   | Apply pending migrations from `src/db/migrations/`    |
+| `npm run db:seed`      | Install the SQL functions + seed default slots        |
+| `npm run db:setup`     | `db:migrate` + `db:seed` (first-time database setup)  |
 
 ## Project structure
 
