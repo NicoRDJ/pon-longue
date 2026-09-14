@@ -32,7 +32,7 @@ export default function About() {
         </ScrollReveal>
 
         <ScrollReveal delay={120}>
-          <div className="text-brass mb-3 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
+          <div className="text-brass mb-3 inline-flex items-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("about.eyebrow")}
           </div>

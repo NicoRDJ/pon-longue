@@ -35,7 +35,7 @@ export default function Hero() {
 
       <div className="relative mx-auto w-full max-w-6xl px-6 pt-40 pb-20">
         <div className="max-w-2xl">
-          <div className="text-brass mb-6 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
+          <div className="text-brass mb-6 inline-flex items-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("hero.eyebrow")}
           </div>
