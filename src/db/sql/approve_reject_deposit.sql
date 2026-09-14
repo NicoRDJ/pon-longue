@@ -51,6 +51,8 @@ begin
 end;
 $$ language plpgsql;
 
+--> statement-breakpoint
+
 -- Rejects a pending-deposit reservation, cancelling it. Nothing to free
 -- up capacity-wise since pending reservations never counted against it.
 create or replace function reject_deposit(

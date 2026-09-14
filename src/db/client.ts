@@ -15,8 +15,8 @@ function getConnectionString(): string {
   const connectionString = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
   if (!connectionString) {
     throw new Error(
-      "Missing DATABASE_URL (or POSTGRES_URL). Add Postgres storage to this " +
-        "Vercel project (or set it in .env.local for local dev) — see README.",
+      "Missing DATABASE_URL (or POSTGRES_URL). Set it to your Neon connection " +
+        "string in .env.local (local) or the hosting panel (production) — see README.",
     );
   }
   return connectionString;

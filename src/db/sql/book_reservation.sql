@@ -17,6 +17,7 @@
 -- The signature gained p_source/p_lang; drop the old 11-argument version
 -- so it doesn't linger as a separate overload.
 drop function if exists book_reservation(text, text, text, int, date, time, text, text, int, int, text);
+--> statement-breakpoint
 
 create or replace function book_reservation(
   p_name text,
