@@ -135,7 +135,7 @@ export default function MenuAccordion({
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                       {group.items.map((item) => (
                         <MenuItemCard
-                          key={item.name_es}
+                          key={item.id ?? item.name_es}
                           item={item}
                           lang={lang}
                           onSelect={() =>

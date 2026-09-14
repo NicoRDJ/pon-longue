@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { cocktailMenu } from "@/data/menu";
+import type { MenuItem } from "@/data/menu";
 import MenuItemPhoto from "@/components/MenuItemPhoto";
 import ParallaxImage from "@/components/ParallaxImage";
 import ScrollReveal from "@/components/ScrollReveal";
 
-const houseCocktails = cocktailMenu.find((c) => c.id === "casa")?.items ?? [];
-
-export default function MenuTeaser() {
+export default function MenuTeaser({ items }: { items: MenuItem[] }) {
   const { lang, t } = useLanguage();
 
   return (
@@ -32,7 +30,7 @@ export default function MenuTeaser() {
       />
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[1.05fr_0.95fr]">
         <ScrollReveal>
-          <div className="text-brass mb-3 inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
+          <div className="text-brass mb-3 inline-flex items-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("menu.eyebrow")}
           </div>
@@ -65,8 +63,8 @@ export default function MenuTeaser() {
         </ScrollReveal>
 
         <div className="grid gap-4.5">
-          {houseCocktails.map((item, i) => (
-            <ScrollReveal key={item.name_es} delay={120 + i * 90}>
+          {items.map((item, i) => (
+            <ScrollReveal key={item.id ?? item.name_es} delay={120 + i * 90}>
               <div className="bg-obsidian-soft flex items-center gap-4.5 rounded-2xl border border-white/10 p-4.5">
                 <MenuItemPhoto
                   image={item.image}

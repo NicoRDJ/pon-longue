@@ -19,9 +19,7 @@ TypeScript + Tailwind CSS v4, deployable on Vercel.
 
 The cocktail menu (`src/data/menu.ts` → `cocktailMenu`), gallery photos, and
 address are the client's real info. Food and testimonials are still
-placeholder/sample content pending the client's real information — clearly
-marked in the UI (preview banners, "sample" notes) so it's obvious what
-still needs replacing.
+placeholder/sample content pending the client's real information.
 
 ## Tech stack
 
@@ -127,6 +125,9 @@ database), the wizard **falls back further** to the original manual flow
 | `slot_capacity`            | Capacity per time slot (seeded from `src/lib/hours.ts`)                                                                                                                                                |
 | `deposit_receipts`         | The transfer screenshot the customer uploads, keyed by its `DEP-XXXXXX` reference                                                                                                                      |
 | `processed_webhook_events` | Inbound-email webhook deliveries already handled, so a retry can't double-book                                                                                                                         |
+| `menu_categories`          | Menu sections (Cócteles de la Casa, Whiskies…) and their order                                                                                                                                         |
+| `menu_items`               | Every product: names/descriptions (ES + optional EN), price, photo, subgroup, visible/hidden, order                                                                                                    |
+| `menu_images`              | Photos uploaded from `/admin/carta` (resized in the browser before upload)                                                                                                                             |
 
 To change the schema: edit `src/db/schema.ts`, run `npm run db:generate`
 (creates a new file in `src/db/migrations/` — commit it), then
@@ -196,6 +197,44 @@ src/components/CancelLookupForm.tsx        # UI for the /cancelar lookup page
 src/lib/useCancelReservation.ts            # Shared cancel-request hook (used by both UIs)
 ```
 
+## Menu admin (`/admin/carta`)
+
+The owners edit the menu themselves — no code changes, no redeploy. Log in
+at `/admin` with `ADMIN_PASSWORD`, then open **Carta**:
+
+- Change prices, names, descriptions and photos (photos are resized to a
+  ~200KB JPEG in the browser before upload).
+- Add or delete products, move them between categories, reorder them.
+- **Ocultar** hides a product from the public menu without deleting it
+  (e.g. out of stock).
+- Add, rename, reorder and delete categories (only empty ones can be
+  deleted). English names/descriptions are optional — the site falls back
+  to Spanish.
+
+`/carta` and the home page teaser are statically cached and refreshed on
+demand after every save (`revalidateMenuPages()` in `src/lib/adminApi.ts`),
+so edits are live on the next visit.
+
+**Where the data lives:** `npm run db:seed` copies `src/data/menu.ts` into
+the `menu_*` tables **once** (when they're empty); from then on the database
+is the source of truth and re-running the seed never overwrites the owners'
+edits. Without `DATABASE_URL`, the same editor works against
+`.data/local-menu.json` (created on the first edit). If the database is
+unreachable, the public pages fall back to `src/data/menu.ts` instead of
+erroring.
+
+```
+src/app/admin/carta/page.tsx          # Editor page (server: auth + load menu)
+src/components/admin/MenuEditor.tsx   # Category/product list, search, actions
+src/components/admin/MenuItemDialog.tsx, MenuCategoryDialog.tsx
+src/app/api/admin/menu/**             # Admin API: items, categories, move, image upload
+src/app/api/menu-images/[id]/route.ts # Public, cached photo serving
+src/db/menuStore.ts                   # Postgres backend + backend selection + seeding
+src/db/menuLocalStore.ts              # Local JSON-file backend
+src/lib/menu.ts                       # Shared types, public-menu mapping, seed conversion
+src/lib/menuValidation.ts             # zod schemas for the admin API
+```
+
 ## Scripts
 
 | Script                 | What it does                                          |
@@ -215,7 +254,7 @@ src/lib/useCancelReservation.ts            # Shared cancel-request hook (used by
 | `npm run db:generate`  | Generate a Drizzle migration from `schema.ts` changes |
 | `npm run db:push`      | Push the current schema straight to the database      |
 | `npm run db:migrate`   | Apply pending migrations from `src/db/migrations/`    |
-| `npm run db:seed`      | Install the SQL functions + seed default slots        |
+| `npm run db:seed`      | SQL functions, time slots, and the menu (first run)   |
 | `npm run db:setup`     | `db:migrate` + `db:seed` (first-time database setup)  |
 
 ## Project structure
@@ -232,7 +271,7 @@ src/
     ReservationWizard.tsx, MenuAccordion.tsx, MenuItemPhoto.tsx, Header.tsx, Footer.tsx, ...
     *.test.tsx           # Co-located unit tests
   db/                    # Drizzle schema, client, atomic booking SQL, seed script
-  data/menu.ts           # cocktailMenu (real) + menu (sample food/wine, still placeholder)
+  data/menu.ts           # Initial menu, copied into the database by db:seed (then edited at /admin/carta)
   lib/
     i18n/                # ES/EN dictionaries + React context (no page routing)
     config.ts            # Contact details, sourced from env vars
@@ -245,10 +284,8 @@ e2e/                     # Playwright specs (external APIs mocked via page.route
 ### Cocktail photos
 
 Menu items render a branded gradient placeholder (`MenuItemPhoto.tsx`) until
-a real photo exists. To add one: drop the image under `public/` (e.g.
-`public/carta/dama-de-pon.jpg`) and set `image: "/carta/dama-de-pon.jpg"` on
-that item in `src/data/menu.ts` — it swaps in automatically on both the
-homepage teaser and `/carta`, no other code changes needed.
+a real photo exists. Upload photos from `/admin/carta` → **Editar** →
+**Subir foto** — they show up on both the homepage teaser and `/carta`.
 
 ## Environment variables
 

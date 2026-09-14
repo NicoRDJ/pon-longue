@@ -3,10 +3,6 @@ export type Lang = "es" | "en";
 export const dictionaries = {
   es: {
     "a11y.skipLink": "Saltar al contenido principal",
-    "preview.banner":
-      "Vista previa de diseño — contenido de muestra, pendiente de reemplazar por la información real de PON Lounge.",
-    "preview.bannerCarta":
-      "Vista previa — carta de muestra, pendiente de reemplazar por la carta real de PON Lounge.",
 
     "nav.about": "Nosotros",
     "nav.menu": "Carta",
@@ -267,10 +263,6 @@ export const dictionaries = {
   },
   en: {
     "a11y.skipLink": "Skip to main content",
-    "preview.banner":
-      "Design preview — sample content, pending replacement with PON Lounge's real information.",
-    "preview.bannerCarta":
-      "Design preview — sample menu, pending replacement with PON Lounge's real menu.",
 
     "nav.about": "About",
     "nav.menu": "Menu",

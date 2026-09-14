@@ -4,6 +4,7 @@ import path from "node:path";
 import { getSql, getDb } from "./client";
 import { slotCapacity } from "./schema";
 import { DEFAULT_SLOTS } from "@/lib/hours";
+import { seedMenuIfEmpty } from "./menuStore";
 
 // Run once after `npm run db:migrate` to install the atomic booking function
 // and seed the default time slots. Safe to re-run (idempotent): the
@@ -42,6 +43,13 @@ async function main() {
       });
   }
   console.log(`✓ Seeded ${DEFAULT_SLOTS.length} time slots`);
+
+  const menuSeed = await seedMenuIfEmpty();
+  console.log(
+    menuSeed === "seeded"
+      ? "✓ Menu copied from src/data/menu.ts"
+      : "✓ Menu already in the database — left untouched",
+  );
 }
 
 main()

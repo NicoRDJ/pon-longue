@@ -49,7 +49,7 @@ export default function Gallery() {
     <section id="galeria" className="bg-obsidian px-6 py-24">
       <div className="mx-auto max-w-6xl">
         <ScrollReveal className="mx-auto mb-12 max-w-xl text-center">
-          <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
+          <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("gallery.eyebrow")}
           </div>

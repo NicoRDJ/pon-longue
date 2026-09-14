@@ -122,7 +122,77 @@ export const processedWebhookEvents = pgTable("processed_webhook_events", {
     .defaultNow(),
 });
 
+// --- Menu (carta), editable by the owners from /admin/carta ---
+// Seeded once from src/data/menu.ts by `npm run db:seed`; from then on this
+// is the source of truth for /carta and the home page teaser.
+
+export const menuCategories = pgTable("menu_categories", {
+  // Stable slug (e.g. "casa") — also used as the accordion anchor id.
+  id: text("id").primaryKey(),
+  nameEs: text("name_es").notNull(),
+  nameEn: text("name_en"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const menuItems = pgTable(
+  "menu_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    categoryId: text("category_id")
+      .notNull()
+      .references(() => menuCategories.id, { onUpdate: "cascade" }),
+    nameEs: text("name_es").notNull(),
+    // English fields are optional — the site falls back to Spanish.
+    nameEn: text("name_en"),
+    descEs: text("desc_es").notNull().default(""),
+    descEn: text("desc_en"),
+    // Null while a price is still pending — the card just hides the badge.
+    price: integer("price"),
+    // Either a static path under /public (e.g. "/carta/negroni.jpg") or an
+    // uploaded photo served from /api/menu-images/<id>.
+    image: text("image"),
+    subcategoryEs: text("subcategory_es"),
+    subcategoryEn: text("subcategory_en"),
+    // Hidden from the public menu without deleting it (e.g. out of stock).
+    available: boolean("available").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("menu_items_category_sort_idx").on(t.categoryId, t.sortOrder),
+    check(
+      "menu_items_price_non_negative",
+      sql`${t.price} is null or ${t.price} >= 0`,
+    ),
+  ],
+);
+
+// Photos uploaded from /admin/carta (already resized/compressed in the
+// browser before upload, so each row is small).
+export const menuImages = pgTable("menu_images", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  mimeType: text("mime_type").notNull(),
+  base64Data: text("base64_data").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type Reservation = typeof reservations.$inferSelect;
 export type NewReservation = typeof reservations.$inferInsert;
 export type SlotCapacity = typeof slotCapacity.$inferSelect;
 export type DepositReceipt = typeof depositReceipts.$inferSelect;
+export type MenuCategoryRow = typeof menuCategories.$inferSelect;
+export type MenuItemRow = typeof menuItems.$inferSelect;

@@ -1,4 +1,7 @@
 export interface MenuItem {
+  // Set once the item comes from the editable menu store (see
+  // src/db/menuStore.ts); absent in the hand-written seed data below.
+  id?: string;
   name_es: string;
   name_en: string;
   desc_es: string;
@@ -25,6 +28,10 @@ export interface MenuCategory {
   items: MenuItem[];
 }
 
+// NOTE: this file is only the *initial* menu. `npm run db:seed` copies it
+// into the database once, and from then on the owners edit the menu from
+// /admin/carta — changes made here afterwards won't show up on the site.
+//
 // PON Lounge's real cocktail list (from the house recipe book), ordered by
 // priority: house creations first, then the most exclusive spirit-forward
 // categories, down to non-alcoholic. Food/dessert/wine categories below are

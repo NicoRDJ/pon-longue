@@ -30,7 +30,7 @@ export default function Location() {
       />
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-stretch gap-12.5 md:grid-cols-[0.9fr_1.1fr]">
         <ScrollReveal className="grid content-start gap-5.5">
-          <div className="text-brass inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase">
+          <div className="text-brass inline-flex items-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("location.eyebrow")}
           </div>

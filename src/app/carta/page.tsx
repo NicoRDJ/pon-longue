@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
 import SkipLink from "@/components/SkipLink";
-import PreviewBanner from "@/components/PreviewBanner";
 import CartaHero from "@/components/sections/CartaHero";
 import MenuAccordion from "@/components/MenuAccordion";
 import CartaNote from "@/components/CartaNote";
 import CartaFooter from "@/components/CartaFooter";
-import { cocktailMenu, menu } from "@/data/menu";
+import { getPublicMenu } from "@/db/menuStore";
 
 export const metadata: Metadata = {
   title: "Carta",
@@ -19,18 +18,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CartaPage() {
+// Rebuilt on demand when the owners edit the menu (see revalidateMenuPages);
+// the hourly revalidation only catches edits made directly in the database.
+export const revalidate = 3600;
+
+export default async function CartaPage() {
+  const categories = await getPublicMenu();
+
   return (
     <>
       <SkipLink />
-      <PreviewBanner textKey="preview.bannerCarta" />
       <Header cartaActive />
 
       <main id="main-content" className="flex-1">
         <CartaHero />
 
         <section className="bg-obsidian px-6 pb-24">
-          <MenuAccordion categories={[...cocktailMenu, ...menu]} />
+          <MenuAccordion categories={categories} />
           <p className="text-cream-muted mt-9 text-center text-sm">
             <CartaNote />
           </p>

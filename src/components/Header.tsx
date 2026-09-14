@@ -65,8 +65,8 @@ export default function Header({
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-[38px] z-[100] px-6 py-5 transition-[transform,background-color,box-shadow,border-color] duration-300 ${
-          hidden ? "-translate-y-[calc(100%+38px)]" : "translate-y-0"
+        className={`fixed inset-x-0 top-0 z-[100] px-6 py-5 transition-[transform,background-color,box-shadow,border-color] duration-300 ${
+          hidden ? "-translate-y-full" : "translate-y-0"
         } ${
           scrolled
             ? "border-b border-white/10 bg-[rgba(11,13,16,0.85)] shadow-[0_8px_30px_rgba(0,0,0,0.35)] backdrop-blur-md"

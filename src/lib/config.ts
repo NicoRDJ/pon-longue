@@ -11,7 +11,7 @@ export const PHONE_DISPLAY =
   process.env.NEXT_PUBLIC_PHONE_DISPLAY ?? "+57 300 000 0000";
 
 export const CONTACT_EMAIL =
-  process.env.NEXT_PUBLIC_RESERVATIONS_EMAIL ?? "hola@ponlounge.co";
+  process.env.NEXT_PUBLIC_RESERVATIONS_EMAIL ?? "ponmusicalsound@gmail.com";
 
 // Optional: a real inbox (e.g. the owner's Gmail) that gets a copy of
 // every confirmed reservation, regardless of whether it came from the

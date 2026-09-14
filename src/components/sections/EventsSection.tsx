@@ -18,7 +18,7 @@ export default function EventsSection() {
     >
       <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 md:grid-cols-[1.1fr_0.9fr]">
         <ScrollReveal className="text-center md:text-left">
-          <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase md:justify-start">
+          <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase md:justify-start">
             <span className="bg-brass h-px w-6" />
             {t("events.eyebrow")}
           </div>
