@@ -5,26 +5,31 @@ import { getSql, getDb } from "./client";
 import { slotCapacity } from "./schema";
 import { DEFAULT_SLOTS } from "@/lib/hours";
 
-// Run once after `npm run db:push` to install the atomic booking function
+// Run once after `npm run db:migrate` to install the atomic booking function
 // and seed the default time slots. Safe to re-run (idempotent): the
 // function is CREATE OR REPLACE, and slot seeding upserts on conflict.
+
+// Neon's HTTP driver runs one statement per query, so each SQL file is
+// split on the same "--> statement-breakpoint" marker drizzle uses in its
+// migrations.
+async function runSqlFile(file: string) {
+  const statements = readFileSync(file, "utf-8")
+    .split("--> statement-breakpoint")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  for (const statement of statements) {
+    await getSql().query(statement);
+  }
+}
+
 async function main() {
-  const sql = getSql();
   const db = getDb();
 
   const dir = path.dirname(fileURLToPath(import.meta.url));
-  const functionSql = readFileSync(
-    path.join(dir, "sql/book_reservation.sql"),
-    "utf-8",
-  );
-  await sql.query(functionSql);
+  await runSqlFile(path.join(dir, "sql/book_reservation.sql"));
   console.log("✓ book_reservation() function installed");
 
-  const depositFunctionsSql = readFileSync(
-    path.join(dir, "sql/approve_reject_deposit.sql"),
-    "utf-8",
-  );
-  await sql.query(depositFunctionsSql);
+  await runSqlFile(path.join(dir, "sql/approve_reject_deposit.sql"));
   console.log("✓ approve_deposit()/reject_deposit() functions installed");
 
   for (const slot of DEFAULT_SLOTS) {

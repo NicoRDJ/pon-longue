@@ -28,27 +28,27 @@ describe("isValidDepositReference", () => {
 });
 
 describe("saveDepositReceipt / getDepositReceipt", () => {
-  it("round-trips a saved receipt", () => {
-    saveDepositReceipt("DEP-A3F9K2", "image/png", "ZmFrZS1pbWFnZS1kYXRh");
-    const found = getDepositReceipt("DEP-A3F9K2");
+  it("round-trips a saved receipt", async () => {
+    await saveDepositReceipt("DEP-A3F9K2", "image/png", "ZmFrZS1pbWFnZS1kYXRh");
+    const found = await getDepositReceipt("DEP-A3F9K2");
     expect(found).toEqual({
       mimeType: "image/png",
       base64Data: "ZmFrZS1pbWFnZS1kYXRh",
     });
   });
 
-  it("returns null for a reference that was never saved", () => {
-    expect(getDepositReceipt("DEP-ZZZZZZ")).toBeNull();
+  it("returns null for a reference that was never saved", async () => {
+    expect(await getDepositReceipt("DEP-ZZZZZZ")).toBeNull();
   });
 
-  it("returns null (rather than throwing) for an invalid reference format", () => {
-    expect(getDepositReceipt("not-a-valid-ref")).toBeNull();
+  it("returns null (rather than throwing) for an invalid reference format", async () => {
+    expect(await getDepositReceipt("not-a-valid-ref")).toBeNull();
   });
 
-  it("overwrites a previous receipt for the same reference", () => {
-    saveDepositReceipt("DEP-A3F9K2", "image/png", "first");
-    saveDepositReceipt("DEP-A3F9K2", "image/jpeg", "second");
-    expect(getDepositReceipt("DEP-A3F9K2")).toEqual({
+  it("overwrites a previous receipt for the same reference", async () => {
+    await saveDepositReceipt("DEP-A3F9K2", "image/png", "first");
+    await saveDepositReceipt("DEP-A3F9K2", "image/jpeg", "second");
+    expect(await getDepositReceipt("DEP-A3F9K2")).toEqual({
       mimeType: "image/jpeg",
       base64Data: "second",
     });
@@ -56,13 +56,13 @@ describe("saveDepositReceipt / getDepositReceipt", () => {
 });
 
 describe("hasDepositReceipt", () => {
-  it("reflects whether a receipt exists for a reference", () => {
-    expect(hasDepositReceipt("DEP-A3F9K2")).toBe(false);
-    saveDepositReceipt("DEP-A3F9K2", "image/png", "data");
-    expect(hasDepositReceipt("DEP-A3F9K2")).toBe(true);
+  it("reflects whether a receipt exists for a reference", async () => {
+    expect(await hasDepositReceipt("DEP-A3F9K2")).toBe(false);
+    await saveDepositReceipt("DEP-A3F9K2", "image/png", "data");
+    expect(await hasDepositReceipt("DEP-A3F9K2")).toBe(true);
   });
 
-  it("returns false for an invalid reference format without throwing", () => {
-    expect(hasDepositReceipt("../../etc/passwd")).toBe(false);
+  it("returns false for an invalid reference format without throwing", async () => {
+    expect(await hasDepositReceipt("../../etc/passwd")).toBe(false);
   });
 });

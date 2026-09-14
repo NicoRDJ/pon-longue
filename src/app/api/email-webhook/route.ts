@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
 
   // Idempotency: a retried webhook delivery for an email we've already
   // fully handled should be a no-op, not a second booking/cancellation.
-  if (hasProcessedWebhookEvent(emailId)) {
+  if (await hasProcessedWebhookEvent(emailId)) {
     return NextResponse.json({ status: "already_processed" }, { status: 200 });
   }
 
@@ -145,13 +145,15 @@ export async function POST(req: NextRequest) {
         depositRequired,
         depositAmount,
         depositReference: parsed.depositReference,
+        source: "email",
+        lang: parsed.lang,
       });
     } catch (err) {
       console.error("bookReservation from email webhook failed:", err);
       return NextResponse.json({ error: "book_failed" }, { status: 500 });
     }
 
-    markWebhookEventProcessed(emailId);
+    await markWebhookEventProcessed(emailId);
 
     if (result.status === "pending_deposit" && result.code) {
       try {
@@ -226,7 +228,7 @@ export async function POST(req: NextRequest) {
   // request at all, e.g. contained a code instead) — hand off to a
   // human, and let the customer know their email arrived and is being
   // looked at.
-  markWebhookEventProcessed(emailId);
+  await markWebhookEventProcessed(emailId);
   try {
     await sendEmailParseFailureNotice({ to: fromAddress, lang: "es" });
     await alertStaff((staffEmail) =>

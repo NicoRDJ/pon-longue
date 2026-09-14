@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    saveDepositReceipt(depositReference, mimeType, base64Data);
+    await saveDepositReceipt(depositReference, mimeType, base64Data);
   } catch (err) {
     console.error("Failed to save deposit receipt:", err);
     return NextResponse.json({ error: "save_failed" }, { status: 500 });

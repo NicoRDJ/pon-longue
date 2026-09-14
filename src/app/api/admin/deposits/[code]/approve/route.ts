@@ -33,9 +33,7 @@ export async function POST(
         partySize: result.reservation.partySize,
         date: result.reservation.date,
         time: result.reservation.time,
-        // The reservation's original language isn't stored — default to
-        // Spanish, the venue's primary market.
-        lang: "es",
+        lang: result.reservation.lang,
       });
     } catch (err) {
       console.error("Failed to send deposit-approved email:", err);

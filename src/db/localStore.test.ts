@@ -32,6 +32,8 @@ function baseInput(
     depositRequired: partySize * DEPOSIT_PER_PERSON,
     depositAmount: partySize * DEPOSIT_PER_PERSON,
     depositReference: null,
+    source: "web" as const,
+    lang: "es" as const,
     ...overrides,
   };
 }
@@ -326,7 +328,18 @@ describe("getLocalReservationByCode", () => {
       depositAmount: 120000,
       depositReference: null,
       depositVerified: false,
+      source: "web",
+      lang: "es",
     });
+  });
+
+  it("remembers the channel and language the reservation was made in", async () => {
+    const booked = await bookLocalReservation(
+      baseInput({ source: "email", lang: "en" }),
+    );
+    const result = await getLocalReservationByCode(booked.code!);
+    expect(result?.source).toBe("email");
+    expect(result?.lang).toBe("en");
   });
 
   it("is case-insensitive", async () => {

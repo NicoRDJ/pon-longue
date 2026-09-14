@@ -15,9 +15,11 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
-    "db:push": "dotenv -e .env.local -- drizzle-kit push",
-    "db:seed": "dotenv -e .env.local -- tsx src/db/seed.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "tsx --env-file=.env.local src/db/migrate.ts",
+    "db:seed": "tsx --env-file=.env.local src/db/seed.ts",
+    "db:setup": "npm run db:migrate && npm run db:seed",
     "prepare": "husky"
   },
   "lint-staged": {

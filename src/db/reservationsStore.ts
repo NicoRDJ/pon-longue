@@ -8,7 +8,7 @@
 // setting the env var, no code change needed.
 
 import { eq, and, sql as sqlOp } from "drizzle-orm";
-import { getDb, getSql } from "@/db/client";
+import { getDb, getSql, hasRemoteDatabase } from "@/db/client";
 import { slotCapacity, reservations } from "@/db/schema";
 import { isPastCancellationCutoff } from "@/lib/reservation";
 import {
@@ -24,6 +24,8 @@ import {
   type CancelResult,
   type ApproveDepositResult,
   type RejectDepositResult,
+  type ReservationSource,
+  type ReservationLang,
 } from "@/db/localStore";
 
 export type AvailabilitySlot = {
@@ -37,11 +39,9 @@ export type {
   CancelResult,
   ApproveDepositResult,
   RejectDepositResult,
+  ReservationSource,
+  ReservationLang,
 };
-
-function hasRemoteDatabase(): boolean {
-  return Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-}
 
 function rowToSummary(r: typeof reservations.$inferSelect): ReservationSummary {
   return {
@@ -60,6 +60,8 @@ function rowToSummary(r: typeof reservations.$inferSelect): ReservationSummary {
     depositAmount: r.depositAmount,
     depositReference: r.depositReference,
     depositVerified: r.depositVerified,
+    source: r.source,
+    lang: r.lang,
   };
 }
 
@@ -112,6 +114,8 @@ export async function bookReservation(input: {
   depositRequired: number;
   depositAmount: number;
   depositReference: string | null;
+  source: ReservationSource;
+  lang: ReservationLang;
 }): Promise<BookResult> {
   if (!hasRemoteDatabase()) {
     return bookLocalReservation(input);
@@ -122,12 +126,22 @@ export async function bookReservation(input: {
     select * from book_reservation(
       ${input.name}, ${input.email}, ${input.phone}, ${input.partySize},
       ${input.date}, ${input.time}, ${input.occasion}, ${input.notes},
-      ${input.depositRequired}, ${input.depositAmount}, ${input.depositReference}
+      ${input.depositRequired}, ${input.depositAmount}, ${input.depositReference},
+      ${input.source}::reservation_source, ${input.lang}::reservation_lang
     )
-  `) as BookResult[];
+  `) as (Omit<BookResult, "depositRequired"> & {
+    deposit_required: number | null;
+  })[];
 
+  const row = rows[0];
   return (
-    rows[0] ?? {
+    (row && {
+      id: row.id,
+      code: row.code,
+      status: row.status,
+      remaining: row.remaining,
+      depositRequired: row.deposit_required,
+    }) ?? {
       id: null,
       code: null,
       status: "unknown_slot" as const,
@@ -183,7 +197,12 @@ export async function cancelReservation(code: string): Promise<CancelResult> {
 
   const updated = await db
     .update(reservations)
-    .set({ status: "cancelled" })
+    .set({
+      status: "cancelled",
+      cancellationReason: "customer",
+      cancelledAt: new Date(),
+      updatedAt: new Date(),
+    })
     .where(
       and(
         eq(reservations.confirmationCode, normalizedCode),

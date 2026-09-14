@@ -1,17 +1,19 @@
 // Tracks which inbound-email webhook events have already been processed,
 // so a retried delivery (Resend/Svix retries on timeout or a 5xx
 // response) can't double-book or double-cancel a reservation. Backed by
-// a small local JSON file, same pattern as localStore.ts.
+// the processed_webhook_events Postgres table when DATABASE_URL is set,
+// otherwise by a small local JSON file, same pattern as localStore.ts.
 //
 // Note: on a serverless deployment without a persistent filesystem (e.g.
-// an early Vercel deploy without Postgres configured), this dedupe list
-// resets on cold start — a very unlikely double-delivery could then slip
-// through. Once real Postgres is provisioned this should move to a
-// small database table for the same durability the reservations
-// themselves get; fine to run on the local file store until then.
+// an early Vercel deploy without Postgres configured), the file-backed
+// dedupe list resets on cold start — a very unlikely double-delivery
+// could then slip through. Provision Postgres to rule that out.
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { eq } from "drizzle-orm";
+import { getDb, hasRemoteDatabase } from "@/db/client";
+import { processedWebhookEvents } from "@/db/schema";
 
 const DATA_FILE = path.join(
   process.cwd(),
@@ -48,11 +50,31 @@ function persist(events: string[]) {
   }
 }
 
-export function hasProcessedWebhookEvent(eventId: string): boolean {
+export async function hasProcessedWebhookEvent(
+  eventId: string,
+): Promise<boolean> {
+  if (hasRemoteDatabase()) {
+    const rows = await getDb()
+      .select({ eventId: processedWebhookEvents.eventId })
+      .from(processedWebhookEvents)
+      .where(eq(processedWebhookEvents.eventId, eventId))
+      .limit(1);
+    return rows.length > 0;
+  }
   return load().includes(eventId);
 }
 
-export function markWebhookEventProcessed(eventId: string): void {
+export async function markWebhookEventProcessed(
+  eventId: string,
+): Promise<void> {
+  if (hasRemoteDatabase()) {
+    await getDb()
+      .insert(processedWebhookEvents)
+      .values({ eventId })
+      .onConflictDoNothing();
+    return;
+  }
+
   const events = load();
   if (events.includes(eventId)) return;
   events.push(eventId);

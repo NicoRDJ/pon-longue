@@ -81,6 +81,8 @@ export async function POST(req: NextRequest) {
       depositRequired,
       depositAmount,
       depositReference: depositReference || null,
+      source: "web",
+      lang,
     });
   } catch (err) {
     console.error("POST /api/reservations failed:", err);

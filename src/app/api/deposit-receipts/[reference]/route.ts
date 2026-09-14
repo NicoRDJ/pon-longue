@@ -14,7 +14,13 @@ export async function GET(
   }
 
   const { reference } = await params;
-  const receipt = getDepositReceipt(decodeURIComponent(reference));
+  let receipt;
+  try {
+    receipt = await getDepositReceipt(decodeURIComponent(reference));
+  } catch (err) {
+    console.error("GET /api/deposit-receipts/[reference] failed:", err);
+    return NextResponse.json({ error: "unavailable" }, { status: 503 });
+  }
   if (!receipt) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
