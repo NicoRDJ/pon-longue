@@ -593,7 +593,7 @@ export default function ReservationWizard() {
       />
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto mb-12 max-w-xl text-center">
-          <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-5xl font-semibold tracking-[0.05ahora em] uppercase">
+          <div className="text-brass mb-3 inline-flex items-center justify-center gap-2 text-5xl font-semibold tracking-[0.05em] uppercase">
             <span className="bg-brass h-px w-6" />
             {t("reserve.eyebrow")}
           </div>
