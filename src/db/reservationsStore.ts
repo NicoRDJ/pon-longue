@@ -187,12 +187,13 @@ export async function cancelReservation(code: string): Promise<CancelResult> {
   const time = existing.reservationTime.slice(0, 5);
   const name = existing.name;
   const email = existing.email;
+  const partySize = existing.partySize;
 
   if (existing.status === "cancelled") {
-    return { status: "already_cancelled", name, email, date, time };
+    return { status: "already_cancelled", name, email, date, time, partySize };
   }
   if (existing.status === "confirmed" && isPastCancellationCutoff(date, time)) {
-    return { status: "too_late", name, email, date, time };
+    return { status: "too_late", name, email, date, time, partySize };
   }
 
   const updated = await db
@@ -212,10 +213,10 @@ export async function cancelReservation(code: string): Promise<CancelResult> {
     .returning({ id: reservations.id });
 
   if (updated.length === 0) {
-    return { status: "already_cancelled", name, email, date, time };
+    return { status: "already_cancelled", name, email, date, time, partySize };
   }
 
-  return { status: "cancelled", name, email, date, time };
+  return { status: "cancelled", name, email, date, time, partySize };
 }
 
 // --- Staff deposit review (/admin panel) ---

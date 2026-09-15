@@ -575,3 +575,57 @@ export async function sendStaffDepositReviewAlert({
     throw new Error(`Resend error: ${error.message}`);
   }
 }
+
+// Internal alert sent to staff whenever a reservation gets cancelled —
+// via the /cancelar page, the "cancel now" button right after booking,
+// or the confirmation email's cancel link. Lets the team know a table
+// just freed up without them having to check the system. Gated behind
+// STAFF_NOTIFICATION_EMAIL the same way the other staff alerts are —
+// callers should skip this entirely when it's unset rather than pass an
+// empty string.
+export async function sendStaffCancellationAlert({
+  staffEmail,
+  code,
+  name,
+  email,
+  date,
+  time,
+  partySize,
+}: {
+  staffEmail: string;
+  code: string;
+  name: string;
+  email: string | null;
+  date: string;
+  time: string;
+  partySize: number | null;
+}) {
+  const resend = getResendClient();
+
+  const html = `
+  <div style="font-family:Arial,Helvetica,sans-serif;background:#0b0d10;padding:32px;color:#f2ece0;">
+    <div style="max-width:520px;margin:0 auto;background:#14181d;border:1px solid rgba(242,236,224,0.12);border-radius:16px;padding:32px;">
+      <p style="color:#e08a8a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 12px;">Reserva cancelada</p>
+      <h1 style="font-size:20px;margin:0 0 20px;color:#f2ece0;">${code}</h1>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr><td style="padding:6px 0;color:#c9c0ae;">Nombre</td><td style="padding:6px 0;text-align:right;font-weight:bold;">${name}</td></tr>
+        <tr><td style="padding:6px 0;color:#c9c0ae;">Correo</td><td style="padding:6px 0;text-align:right;">${email ?? "—"}</td></tr>
+        ${partySize != null ? `<tr><td style="padding:6px 0;color:#c9c0ae;">Personas</td><td style="padding:6px 0;text-align:right;">${partySize}</td></tr>` : ""}
+        <tr><td style="padding:6px 0;color:#c9c0ae;">Fecha</td><td style="padding:6px 0;text-align:right;">${formatDate(date, "es")}</td></tr>
+        <tr><td style="padding:6px 0;color:#c9c0ae;">Hora</td><td style="padding:6px 0;text-align:right;">${formatTime(time)}</td></tr>
+      </table>
+      <p style="margin:16px 0 0;font-size:12px;color:#c9c0ae;">Ese horario ya quedó libre de nuevo para otros clientes.</p>
+    </div>
+  </div>`;
+
+  const { error } = await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: staffEmail,
+    subject: `Reserva cancelada — ${code} (${name})`,
+    html,
+  });
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`);
+  }
+}

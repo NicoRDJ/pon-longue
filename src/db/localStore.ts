@@ -99,6 +99,7 @@ export type CancelResult = {
   email?: string | null;
   date?: string;
   time?: string;
+  partySize?: number;
 };
 
 export type ApproveDepositResult = {
@@ -398,6 +399,7 @@ export async function cancelLocalReservation(
         email: r.email,
         date: r.reservationDate,
         time: r.reservationTime,
+        partySize: r.partySize,
       };
     }
     // Pending-deposit reservations never held capacity, so cancelling
@@ -413,6 +415,7 @@ export async function cancelLocalReservation(
         email: r.email,
         date: r.reservationDate,
         time: r.reservationTime,
+        partySize: r.partySize,
       };
     }
 
@@ -428,6 +431,7 @@ export async function cancelLocalReservation(
       email: r.email,
       date: r.reservationDate,
       time: r.reservationTime,
+      partySize: r.partySize,
     };
   });
 }

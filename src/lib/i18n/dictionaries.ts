@@ -3,6 +3,8 @@ export type Lang = "es" | "en";
 export const dictionaries = {
   es: {
     "a11y.skipLink": "Saltar al contenido principal",
+    "preview.banner":
+      "Vista previa — este contenido es de muestra, aún no es la información real del cliente.",
 
     "nav.about": "Nosotros",
     "nav.menu": "Carta",
@@ -263,6 +265,8 @@ export const dictionaries = {
   },
   en: {
     "a11y.skipLink": "Skip to main content",
+    "preview.banner":
+      "Preview — this is sample content, not the client's real information yet.",
 
     "nav.about": "About",
     "nav.menu": "Menu",

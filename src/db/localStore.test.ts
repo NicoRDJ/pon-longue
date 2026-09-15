@@ -244,6 +244,7 @@ describe("cancelLocalReservation", () => {
       email: "ana@example.com",
       date: "2099-01-01",
       time: "16:00",
+      partySize: 4,
     });
 
     const slots = await getLocalAvailability("2099-01-01");
@@ -282,6 +283,7 @@ describe("cancelLocalReservation", () => {
       email: null,
       date: "2099-01-01",
       time: "16:00",
+      partySize: 4,
     });
 
     const stored = await getLocalReservationByCode(booked.code!);

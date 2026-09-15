@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cancelReservation } from "@/db/reservationsStore";
-import { sendCancellationEmail } from "@/lib/email";
+import { sendCancellationEmail, sendStaffCancellationAlert } from "@/lib/email";
+import { STAFF_NOTIFICATION_EMAIL } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +62,25 @@ export async function POST(
       });
     } catch (err) {
       console.error("Failed to send cancellation email:", err);
+    }
+  }
+
+  // Best-effort internal notification — inactive until
+  // STAFF_NOTIFICATION_EMAIL is set (same gate the other staff alerts
+  // use, see config.ts).
+  if (STAFF_NOTIFICATION_EMAIL && result.name && result.date && result.time) {
+    try {
+      await sendStaffCancellationAlert({
+        staffEmail: STAFF_NOTIFICATION_EMAIL,
+        code: normalizedCode,
+        name: result.name,
+        email: result.email ?? null,
+        date: result.date,
+        time: result.time,
+        partySize: result.partySize ?? null,
+      });
+    } catch (err) {
+      console.error("Failed to send staff cancellation alert:", err);
     }
   }
 
