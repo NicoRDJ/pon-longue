@@ -154,12 +154,14 @@ export function splitMenu(categories: AdminMenuCategory[]) {
   };
 }
 
-// Home page teaser: the house cocktails, or the first category if the
-// owners renamed/removed that one.
+// Home page teaser: cocktails with a real photo, house creations first —
+// falls through into the other categories (in menu order) so the teaser
+// still shows a full row even while most of the house category has no
+// photo yet. Only items with a photo are eligible at all, to avoid the
+// branded placeholder showing up here.
 export function teaserItems(categories: MenuCategory[], limit = 5) {
-  const house = categories.find((c) => c.id === "casa") ?? categories[0];
-  // Only items with a real photo for now — avoids the branded placeholder
-  // showing up in this homepage teaser while photos are still being added
-  // for the rest of the house menu.
-  return (house?.items ?? []).filter((item) => item.image).slice(0, limit);
+  return categories
+    .flatMap((c) => c.items)
+    .filter((item) => item.image)
+    .slice(0, limit);
 }
