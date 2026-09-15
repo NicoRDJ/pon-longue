@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import {
   PHONE_DISPLAY,
@@ -27,9 +28,13 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-1 gap-10 border-b border-white/10 pb-10 md:grid-cols-[1.3fr_1fr_1fr]">
           <div>
-            <div className="font-display text-cream mb-3.5 text-xl tracking-wide">
-              PON <em className="text-brass-light italic not-italic">Lounge</em>
-            </div>
+            <Image
+              src="/pon-logo.png"
+              alt="PON Lounge"
+              width={657}
+              height={240}
+              className="mb-3.5 h-9 w-auto"
+            />
             <p className="text-cream-muted">{t("footer.about")}</p>
           </div>
           <div>
