@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import MobileNav from "./MobileNav";
@@ -74,11 +75,15 @@ export default function Header({
         }`}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-5">
-          <Link
-            href="/"
-            className="font-display text-cream text-xl tracking-wide"
-          >
-            PON <em className="text-brass-light italic not-italic">Lounge</em>
+          <Link href="/" aria-label="PON Lounge">
+            <Image
+              src="/pon-logo.png"
+              alt="PON Lounge"
+              width={657}
+              height={240}
+              priority
+              className="h-9 w-auto sm:h-10"
+            />
           </Link>
 
           <nav
