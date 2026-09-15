@@ -158,5 +158,8 @@ export function splitMenu(categories: AdminMenuCategory[]) {
 // owners renamed/removed that one.
 export function teaserItems(categories: MenuCategory[], limit = 5) {
   const house = categories.find((c) => c.id === "casa") ?? categories[0];
-  return house?.items.slice(0, limit) ?? [];
+  // Only items with a real photo for now — avoids the branded placeholder
+  // showing up in this homepage teaser while photos are still being added
+  // for the rest of the house menu.
+  return (house?.items ?? []).filter((item) => item.image).slice(0, limit);
 }
